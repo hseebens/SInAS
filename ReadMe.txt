@@ -2,13 +2,15 @@
 ####### SInAS workflow: Integration and standardisation of alien species data ###########
 #########################################################################################
 ##
-## sTwist workshop
-## Hanno Seebens, Frankfurt, 06.04.2020
+## Hanno Seebens, Frankfurt, 25.06.2025
 #########################################################################################
 
 The R scripts contain the implementation of a workflow to standardise and merge 
 databases of alien species occurrences and years of first record. The workflow is 
-described in detail in Seebens et al......
+described in detail in Seebens, H., 
+D. A. Clarke, Q. Groom, J. R. U. Wilson, E. García-Berthou, I. Kühn, M. Roigé, 
+S. Pagad, F. Essl, J. Vicente, M. Winter, and M. McGeoch. 2020. A workflow for 
+standardising and integrating alien species distribution data. NeoBiota 59:39–59.
 
 The R scripts can be used and modified freely as long as the work is properly cited
 with the aforementioned citation.
@@ -24,8 +26,8 @@ In brief, the workflow consists of the following five steps:
 Input: 
 Information about databases has to be provided in DatabaseInfo.xlsx.
 Modification of location names, taxon names, terminologies and rules to treat first records can be
-done in UserDefinedSpeciesNames.xlsx, AllRegionsList.xlsx, SubspecIdentifier.xlsx, 
-Guidelines_FirstRecords.xlsx and five translation tables for pathway, habitat, 
+done in UserDefinedSpeciesNames.xlsx, AllLocations.xlsx,
+Guidelines_eventDates.xlsx and five translation tables for pathway, habitat, 
 occurrence status, degree of establishment and establishment means.
 Note that only the first sheet of the Excel file is read in. Others are ignored.
 
