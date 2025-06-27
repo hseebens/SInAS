@@ -1,6 +1,5 @@
 ## SInAS workflow: Integration and standardisation of alien species occurrence data
-sTwist workshop at German Centre for Integrative Biodiversity Research (iDiv) 
-Author: Hanno Seebens, Frankfurt, 01.07.2020
+Author: Hanno Seebens, Frankfurt, 25.06.2025
 
 The R scripts contain the implementation of a workflow to standardise and integrate 
 databases of alien species occurrences and years of first record. The workflow is 
@@ -24,8 +23,8 @@ Input:
 Information about databases has to be provided in DatabaseInfo.xlsx.
 The workflow can be adjusted by modifying input tables providing information about
 location names, taxon names, terminologies and rules to treat first records can be
-done in UserDefinedSpeciesNames.xlsx, AllRegionsList.xlsx, 
-Guidelines_FirstRecords.xlsx and five translation tables for pathway, habitat, 
+done in UserDefinedTaxonNames.xlsx, AllLocations.xlsx, 
+Guidelines_eventDates.xlsx and five translation tables for pathway, habitat, 
 occurrence status, degree of establishment and establishment means, respectively.
 Note that only the first sheet of the Excel file is read in. Others are ignored.
 

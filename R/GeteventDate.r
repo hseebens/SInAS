@@ -6,8 +6,7 @@
 ## Event dates are modified according to a set of rules defined in "Guidelines_eventDates.xlsx",
 ## then converted to numerics and - if necessary - merged to get single first records.
 ##
-## sTwist workshop
-## Hanno Seebens, Frankfurt, 24.03.2020
+## Hanno Seebens, Gießen, 17.06.2025
 #########################################################################################################
 
 

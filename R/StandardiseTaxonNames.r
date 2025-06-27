@@ -7,8 +7,7 @@
 ## to access GBIF and treat results is implemented in CheckGBIFTax.r.
 ## Script requires internet connection.
 ##
-## sTwist workshop
-## Hanno Seebens, Frankfurt, 10.03.2020
+## Hanno Seebens, Gießen, 17.06.2025
 #########################################################################################
 
 
@@ -34,20 +33,20 @@ StandardiseTaxonNames <- function (FileInfo){
   #   print(inputfiles[i])
   #   print(dim(dat))
   #   print(length(unique(dat$Species_name_orig)))
-  #   print(length(unique(dat$Location_orig)))
+  #   print(length(unique(dat$location_orig)))
   # }
     
-    dat <- dat[,!colnames(dat)%in%c("Location_orig")]
+    dat <- dat[,!colnames(dat)%in%c("location_orig")]
     
     # remove white space #######################################
-    dat$Taxon_orig <- gsub("  "," ",dat$Taxon_orig)
-    dat$Taxon_orig <- gsub("^\\s+|\\s+$", "",dat$Taxon_orig) # trim leading and trailing whitespace
-    dat$Taxon_orig <- gsub("[$\xc2\xa0]", " ",dat$Taxon_orig) # replace weird white space with recognised white space
-    dat$Taxon_orig <- gsub("  "," ",dat$Taxon_orig)
-    dat$Taxon_orig <- gsub("\n"," ",dat$Taxon_orig)
+    dat$taxon_orig <- gsub("  "," ",dat$taxon_orig)
+    dat$taxon_orig <- gsub("^\\s+|\\s+$", "",dat$taxon_orig) # trim leading and trailing whitespace
+    dat$taxon_orig <- gsub("[$\xc2\xa0]", " ",dat$taxon_orig) # replace weird white space with recognised white space
+    dat$taxon_orig <- gsub("  "," ",dat$taxon_orig)
+    dat$taxon_orig <- gsub("\n"," ",dat$taxon_orig)
     
-    dat <- dat[!is.na(dat$Taxon_orig),]
-    dat <- dat[dat$Taxon_orig!="",]
+    dat <- dat[!is.na(dat$taxon_orig),]
+    dat <- dat[dat$taxon_orig!="",]
     
     # loop over provided list of keywords to identify sub-species level information
     # subspIdent <- read.xlsx("Config/SubspecIdentifier.xlsx",colNames=F)[,1]
@@ -71,7 +70,7 @@ StandardiseTaxonNames <- function (FileInfo){
     mismatches <- dat[[2]]
     
     ## export full species list with original species names and names assigned by GBIF for checking
-    fullspeclist <- rbind(fullspeclist,unique(DB[,c("Taxon_orig","Taxon","scientificName","GBIFstatus","GBIFstatus_Synonym","GBIFmatchtype","GBIFtaxonRank","GBIFusageKey","GBIFnote","species","genus","family","order","class","phylum","kingdom")]))
+    fullspeclist <- rbind(fullspeclist,unique(DB[,c("taxon_orig","taxon","scientificName","GBIFstatus","GBIFstatus_Synonym","GBIFmatchtype","GBIFtaxonRank","GBIFusageKey","GBIFnote","species","genus","family","order","class","phylum","kingdom")]))
     
     DB <- unique(DB) # remove duplicates
     DB$GBIFstatus[is.na(DB$GBIFstatus)] <- "NoMatch"
@@ -79,13 +78,13 @@ StandardiseTaxonNames <- function (FileInfo){
     
     write.table(DB,file.path("Output","Intermediate",paste0("Step4_StandardTaxonNames_",FileInfo[i,"Dataset_brief_name"],".csv")),row.names=F)
     
-    oo <- order(mismatches$Taxon)
+    oo <- order(mismatches$taxon)
     mismatches <- unique(mismatches[oo,])
     
     write.table(mismatches,file.path("Output","Check",paste0("Missing_Taxa_",FileInfo[i,"Dataset_brief_name"],".csv")),row.names=F,col.names=F)
   }
   
-  oo <- order(fullspeclist$kingdom,fullspeclist$phylum,fullspeclist$class,fullspeclist$order,fullspeclist$Taxon)
+  oo <- order(fullspeclist$kingdom,fullspeclist$phylum,fullspeclist$class,fullspeclist$order,fullspeclist$taxon)
   fullspeclist <- unique(fullspeclist[oo,])
   
   ## assign taxon ID unique to individual taxa #############
@@ -107,10 +106,10 @@ StandardiseTaxonNames <- function (FileInfo){
   
   ## add taxon ID to data sets ##########
   
-  taxon_id <- unique(fullspeclist_2[,c("taxonID","Taxon_orig")])
+  taxon_id <- unique(fullspeclist_2[,c("taxonID","taxon_orig")])
   for (i in 1:length(inputfiles)){ # loop over inputfiles 
     dat <- read.table(file.path("Output","Intermediate",paste0("Step4_StandardTaxonNames_",FileInfo[i,"Dataset_brief_name"],".csv")),header=T,stringsAsFactors = F)
-    dat <- merge(dat,taxon_id,by="Taxon_orig",all.x=T)
+    dat <- merge(dat,taxon_id,by="taxon_orig",all.x=T)
     
     write.table(dat,file.path("Output","Intermediate",paste0("Step4_StandardTaxonNames_",FileInfo[i,"Dataset_brief_name"],".csv")),row.names=F)
   }  

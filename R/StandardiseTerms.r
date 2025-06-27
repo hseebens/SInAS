@@ -3,8 +3,7 @@
 ##
 ## Step 2a: Standardisation of terminologies using a set of translation tables 
 ##
-## sTwist workshop
-## Hanno Seebens, Frankfurt, 10.03.2020
+## Manuela Gómez-Suárez, Hanno Seebens, Gießen, 17.06.2025
 #########################################################################################
 
 
