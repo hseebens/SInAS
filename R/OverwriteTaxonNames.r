@@ -5,8 +5,7 @@
 ##
 ## Replacing taxon names by user-defined list "UserDefinedTaxonNames.xlsx"
 ##
-## sTwist workshop
-## Hanno Seebens, Frankfurt, 10.03.2020
+## Hanno Seebens, Gießen, 17.06.2025
 #########################################################################################
 
 
@@ -34,32 +33,32 @@ OverwriteTaxonNames <- function (FileInfo){
     dat <- read.table(file.path("Output","Intermediate",inputfiles[i]),header=T,stringsAsFactors = F)
     missing <- read.table(file.path("Output","Check",paste0("Missing_Taxa_",FileInfo[i,"Dataset_brief_name"],".csv")),stringsAsFactors=F)[,1]
     
-    if (!any(new_names$Taxon_orig%in%dat$Taxon_orig)) next # jump to next database if no match found
+    if (!any(new_names$taxon_orig%in%dat$taxon_orig)) next # jump to next database if no match found
     
     ## replace taxonomic information for each provided new taxon name 
     for (j in 1:nrow(new_names)){
       
-      # if (length(unique(dat[dat$Taxon_orig==new_names$Taxon_orig[j],]$Family))>1 & is.na(new_names$Family[j])){
-      #   cat(paste0("\n Warning: Taxon name '",new_names$Taxon_orig[j],"' found for more than one family. Add taxonomic information in UserDefinedTaxonNames.xlsx \n"))
+      # if (length(unique(dat[dat$taxon_orig==new_names$taxon_orig[j],]$Family))>1 & is.na(new_names$Family[j])){
+      #   cat(paste0("\n Warning: Taxon name '",new_names$taxon_orig[j],"' found for more than one family. Add taxonomic information in UserDefinedTaxonNames.xlsx \n"))
       #   next
       # }
   
       ## overwrite taxononomic information in individual database files
-      dat[dat$Taxon_orig==new_names$Taxon_orig[j],]$Taxon <- new_names$New_Taxon[j]
-      if (!is.na(new_names$New_scientificName[j])) dat[dat$Taxon==new_names$Taxon_orig[j],]$scientificName <- new_names$New_scientificName[j]
+      dat[dat$taxon_orig==new_names$taxon_orig[j],]$taxon <- new_names$New_taxon[j]
+      if (!is.na(new_names$New_scientificName[j])) dat[dat$taxon==new_names$taxon_orig[j],]$scientificName <- new_names$New_scientificName[j]
       
       ## overwrite taxononomic information in full taxon list
-      fullspeclist[fullspeclist$Taxon_orig==new_names$Taxon_orig[j],]$Taxon <- new_names$New_Taxon[j]
-      fullspeclist[fullspeclist$Taxon_orig==new_names$Taxon_orig[j],]$GBIFstatus <- ""
-      if (!is.na(new_names$New_scientificName[j])) fullspeclist[fullspeclist$Taxon_orig==new_names$Taxon_orig[j],]$scientificName <- new_names$New_scientificName[j]
-      if (!is.na(new_names$family[j])) fullspeclist[fullspeclist$Taxon_orig==new_names$Taxon_orig[j],]$family <- new_names$family[j]
-      if (!is.na(new_names$order[j])) fullspeclist[fullspeclist$Taxon_orig==new_names$Taxon_orig[j],]$order <- new_names$order[j]
-      if (!is.na(new_names$class[j])) fullspeclist[fullspeclist$Taxon_orig==new_names$Taxon_orig[j],]$class <- new_names$class[j]
-      if (!is.na(new_names$phylum[j])) fullspeclist[fullspeclist$Taxon_orig==new_names$Taxon_orig[j],]$phylum <- new_names$phylum[j]
-      if (!is.na(new_names$kingdom[j])) fullspeclist[fullspeclist$Taxon_orig==new_names$Taxon_orig[j],]$kingdom <- new_names$kingdom[j]
+      fullspeclist[fullspeclist$taxon_orig==new_names$taxon_orig[j],]$taxon <- new_names$New_taxon[j]
+      fullspeclist[fullspeclist$taxon_orig==new_names$taxon_orig[j],]$GBIFstatus <- ""
+      if (!is.na(new_names$New_scientificName[j])) fullspeclist[fullspeclist$taxon_orig==new_names$taxon_orig[j],]$scientificName <- new_names$New_scientificName[j]
+      if (!is.na(new_names$family[j])) fullspeclist[fullspeclist$taxon_orig==new_names$taxon_orig[j],]$family <- new_names$family[j]
+      if (!is.na(new_names$order[j])) fullspeclist[fullspeclist$taxon_orig==new_names$taxon_orig[j],]$order <- new_names$order[j]
+      if (!is.na(new_names$class[j])) fullspeclist[fullspeclist$taxon_orig==new_names$taxon_orig[j],]$class <- new_names$class[j]
+      if (!is.na(new_names$phylum[j])) fullspeclist[fullspeclist$taxon_orig==new_names$taxon_orig[j],]$phylum <- new_names$phylum[j]
+      if (!is.na(new_names$kingdom[j])) fullspeclist[fullspeclist$taxon_orig==new_names$taxon_orig[j],]$kingdom <- new_names$kingdom[j]
       
       ## remove taxon name from list of missing taxon names
-      if (any(new_names$Taxon_orig[j]%in%missing)) missing <- missing[!missing%in%new_names$Taxon_orig[j]]
+      if (any(new_names$taxon_orig[j]%in%missing)) missing <- missing[!missing%in%new_names$taxon_orig[j]]
     }
     
     write.table(missing,file.path("Output","Check",paste0("Missing_Taxa_",FileInfo[i,"Dataset_brief_name"],".csv")))
@@ -67,5 +66,42 @@ OverwriteTaxonNames <- function (FileInfo){
     write.table(dat,file.path("Output","Intermediate",paste0("Step4_StandardTaxonNames_",FileInfo[i,"Dataset_brief_name"],".csv")))
   }
   
+  
+  ## define major taxonomic groups ###################
+  fullspeclist$taxaGroup <- NA
+  fullspeclist$taxaGroup[fullspeclist$scientificName%in%subset(fullspeclist,class=="Mammalia")$scientificName] <- "Mammals"
+  fullspeclist$taxaGroup[fullspeclist$scientificName%in%subset(fullspeclist,class=="Aves")$scientificName] <- "Birds"
+  fullspeclist$taxaGroup[fullspeclist$scientificName%in%subset(fullspeclist,class%in%c("Cephalaspidomorphi","Actinopterygii","Elasmobranchii","Sarcopterygii", "Petromyzonti"))$scientificName] <- "Fishes"
+  fullspeclist$taxaGroup[fullspeclist$scientificName%in%subset(fullspeclist,order%in%c("Polypteriformes", "Acipenseriformes", "Lepisosteiformes", "Amiiformes", "Osteoglossiformes", "Hiodontiformes", 
+                                                                         "Elopiformes", "Albuliformes", "Notacanthiformes", "Anguilliformes", "Saccopharyngiformes", "Clupeiformes", "Ceratodontiformes",
+                                                                         "Gonorynchiformes", "Cypriniformes", "Characiformes", "Gymnotiformes", "Siluriformes", "Salmoniformes", "Esociformes", 
+                                                                         "Osmeriformes", "Ateleopodiformes", "Stomiiformes", "Aulopiformes", "Myctophiformes", "Lampriformes", "Polymixiiformes", 
+                                                                         "Percopsiformes", "Batrachoidiformes", "Lophiiformes", "Gadiformes", "Ophidiiformes", "Mugiliformes", "Atheriniformes", 
+                                                                         "Beloniformes", "Cetomimiformes", "Cyprinodontiformes", "Stephanoberyciformes", "Beryciformes", "Zeiformes", 
+                                                                         "Gobiesociformes", "Gasterosteiformes", "Syngnathiformes", "Synbranchiformes", "Tetraodontiformes", "Pleuronectiformes", 
+                                                                         "Scorpaeniformes", "Perciformes"))$scientificName] <- "Fishes"
+  fullspeclist$taxaGroup[fullspeclist$scientificName%in%subset(fullspeclist,class%in%c("Reptilia", "Testudines","Squamata", "Crocodylia"))$scientificName] <- "Reptiles"
+  fullspeclist$taxaGroup[fullspeclist$scientificName%in%subset(fullspeclist,class=="Amphibia")$scientificName] <- "Amphibians"
+  fullspeclist$taxaGroup[fullspeclist$scientificName%in%subset(fullspeclist, class%in%c("Insecta"))$scientificName] <- "Insects"
+  fullspeclist$taxaGroup[fullspeclist$scientificName%in%subset(fullspeclist, class%in%c("Arachnida", "Pycnogonida"))$scientificName] <- "Arachnids"
+  fullspeclist$taxaGroup[fullspeclist$scientificName%in%subset(fullspeclist, class%in%c("Collembola", "Chilopoda", "Diplopoda", "Diplura", "Merostomata", "Pauropoda", "Protura", "Symphyla"))$scientificName] <- "Other arthropods"
+  fullspeclist$taxaGroup[fullspeclist$scientific%in%subset(fullspeclist,class%in%c("Branchiopoda","Hexanauplia","Maxillopoda","Ostracoda","Malacostraca", "Copepoda"))$scientificName] <- "Crustaceans"
+  fullspeclist$taxaGroup[fullspeclist$scientific%in%subset(fullspeclist,family%in%c("Elminiidae"))$scientificName] <- "Crustaceans"
+  fullspeclist$taxaGroup[fullspeclist$scientific%in%subset(fullspeclist,phylum=="Mollusca")$scientificName] <- "Molluscs"
+  fullspeclist$taxaGroup[fullspeclist$scientificName %in% subset(fullspeclist, phylum %in% "Tracheophyta")$scientificName] <- "Vascular plants"
+  fullspeclist$taxaGroup[fullspeclist$scientificName%in%subset(fullspeclist,phylum%in%c("Bryophyta","Anthocerotophyta", "Marchantiophyta"))$scientificName] <- "Bryophytes"
+  fullspeclist$taxaGroup[fullspeclist$scientific%in%subset(fullspeclist,phylum%in%c("Rhodophyta","Chlorophyta","Charophyta","Cryptophyta","Haptophyta"))$scientificName] <- "Algae"
+  fullspeclist$taxaGroup[fullspeclist$scientific%in%subset(fullspeclist,phylum%in%c("Ascomycota", "Dothideomycetes", "Sordariomycetes", "Chytridiomycota","Basidiomycota","Microsporidia","Zygomycota", "Entomophthoromycota"))$scientificName] <- "Fungi"
+  fullspeclist$taxaGroup[fullspeclist$scientific%in%subset(fullspeclist,phylum%in%c("Actinobacteria","Chlamydiae","Cyanobacteria","Firmicutes","Proteobacteria"))$scientificName |
+                          fullspeclist$class == "Ichthyosporea"] <- "Bacteria and protozoans"
+  fullspeclist$taxaGroup[fullspeclist$scientific%in%subset(fullspeclist,kingdom%in%c("Bacteria", "Protozoa","Euglenozoa"))$scientificName] <- "Bacteria and protozoans"
+  fullspeclist$taxaGroup[fullspeclist$scientific%in%subset(fullspeclist,kingdom%in%c("Viruses"))$scientificName] <- "Viruses"
+  fullspeclist$taxaGroup[fullspeclist$scientific%in%subset(fullspeclist,phylum%in%c("Annelida", "Nematoda", "Platyhelminthes", "Sipuncula", "Nemertea", "Onychophora", "Acanthocephala"))$scientificName] <- "Annelids, nematodes, platyhelminthes, and other worms"
+  fullspeclist$taxaGroup[fullspeclist$scientific%in%subset(fullspeclist,phylum%in%c("Bryozoa", "Entoprocta", "Chaetognatha", "Cnidaria", "Ctenophora", "Echinodermata", "Phoronida", "Porifera", "Rotifera", "Xenacoelomorpha","Brachiopoda"))$scientificName] <- "Other aquatic animals"
+  fullspeclist$taxaGroup[fullspeclist$scientific%in%subset(fullspeclist,class=="Ascidiacea")$scientificName] <- "Other aquatic animals"
+  fullspeclist$taxaGroup[fullspeclist$scientificName%in%subset(fullspeclist, phylum%in%c("Foraminifera","Cercozoa","Ciliophora","Ochrophyta","Oomycota","Myzozoa","Peronosporea", "Bigyra"))$scientificName] <- "SAR"
+  fullspeclist$taxaGroup[fullspeclist$scientificName%in%subset(fullspeclist, genus%in%c("Plasmodium"))$scientificName] <- "SAR"
+  
+  # write output
   write.table(fullspeclist,file.path("Output",paste0(outputfilename,"_",version,"_","FullTaxaList.csv")),row.names=F)
 }

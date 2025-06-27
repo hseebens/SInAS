@@ -4,8 +4,7 @@
 ## Step 1: Prepare databases of alien taxon distribution and first records
 ## as input datasets to create a merged database
 ## 
-## sTwist workshop
-## Hanno Seebens, Frankfurt, 10.03.2020
+## Hanno Seebens, Gießen, 17.06.2025
 #########################################################################################
 
 
@@ -29,7 +28,8 @@ PrepareDatasets <- function (FileInfo){
       dat <- try(read.xlsx(file.path("Inputfiles",data_name),sheet=1),silent=T)
     } 
     if (grepl("\\.csv$",data_name)){
-      dat <- try(read.csv(file.path("Inputfiles",data_name)),silent=T)
+      # dat <- try(read.csv(file.path("Inputfiles",data_name)),silent=T)
+      dat <- try(as.data.frame(fread(file.path("Inputfiles",data_name)),stringsAsFactors=F),silent=T)
       if (dim(dat)[2]<3)  dat <- try(as.data.frame(fread(file.path("Inputfiles",data_name)),stringsAsFactors=F),silent=T)
     }
     if (class(dat)=="try-error") stop(paste0("File ’",data_name,"’ should be csv or xlsx format"))
@@ -61,8 +61,8 @@ PrepareDatasets <- function (FileInfo){
       all_column_names <- c(all_column_names,paste("recordID",FileInfo[i,"Dataset_brief_name"],sep="_"))
     }
     
-    if (!is.na(FileInfo[i,"Column_Taxon"]) & FileInfo[i,"Column_Taxon"]!=""){
-      col_spec_names <- FileInfo[i,"Column_Taxon"]
+    if (!is.na(FileInfo[i,"Column_taxon"]) & FileInfo[i,"Column_taxon"]!=""){
+      col_spec_names <- FileInfo[i,"Column_taxon"]
       all_column_names <- col_spec_names
       if (is.na(col_spec_names)) stop(paste("Column with taxon names not found in",FileInfo[i,"Dataset_brief_name"],"file!"))
       if (!is.na(FileInfo[i,"Column_author"]) & FileInfo[i,"Column_author"]!=""){
@@ -79,7 +79,7 @@ PrepareDatasets <- function (FileInfo){
       all_column_names <- col_spec_names
     }
 
-    col_reg_names <- FileInfo[i,"Column_Location"]
+    col_reg_names <- FileInfo[i,"Column_location"]
     if (is.na(col_reg_names)) stop(paste("Column with location names not found in",FileInfo[i,"Dataset_brief_name"],"file!"))
     all_column_names <- c(all_column_names,col_reg_names)
 
@@ -91,7 +91,7 @@ PrepareDatasets <- function (FileInfo){
     # if (!is.na(FileInfo[i,"Column_island_name"]) & FileInfo[i,"Column_island_name"]!=""){
     #   col_islandname <- FileInfo[i,"Column_island_name"]
     #   ind_NA <- is.na(dat$island)
-    #   dat$Location_orig[!ind_NA] <- dat$island[!ind_NA] # replace country names by island names
+    #   dat$location_orig[!ind_NA] <- dat$island[!ind_NA] # replace country names by island names
     # }
     if (!is.na(FileInfo[i,"Column_country_ISO"]) & FileInfo[i,"Column_country_ISO"]!=""){
       col_country_code <- FileInfo[i,"Column_country_ISO"]
@@ -132,14 +132,18 @@ PrepareDatasets <- function (FileInfo){
       }
       all_column_names <- c(all_column_names,"degreeOfEstablishment")
       dat$degreeOfEstablishment <- tolower(dat$degreeOfEstablishment)
+      }
+    if (!is.na(FileInfo[i,"Column_pathway"]) & FileInfo[i,"Column_pathway"]!=""){
+    col_pathway <- FileInfo[i,"Column_pathway"]
+    all_column_names <- c(all_column_names,col_pathway)
     }
     if (!is.na(FileInfo[i,"Column_habitat"]) & FileInfo[i,"Column_habitat"]!=""){
       col_habitat <- FileInfo[i,"Column_habitat"]
       all_column_names <- c(all_column_names,col_habitat)
     }
-    if (!is.na(FileInfo[i,"Column_references"]) & FileInfo[i,"Column_references"]!=""){
-      col_references <- FileInfo[i,"Column_references"]
-      all_column_names <- c(all_column_names,col_references)
+    if (!is.na(FileInfo[i,"Column_bibliographicCitation"]) & FileInfo[i,"Column_bibliographicCitation"]!=""){
+      col_bibliographicCitation <- FileInfo[i,"Column_bibliographicCitation"]
+      all_column_names <- c(all_column_names,col_bibliographicCitation)
     }
 
     if (!is.na(FileInfo[i,"Column_additional"]) & FileInfo[i,"Column_additional"]!=""){
@@ -155,33 +159,34 @@ PrepareDatasets <- function (FileInfo){
     
     ## standardise column names
     col_names_import <- colnames(dat_out)
-    if (exists("col_spec_names")) colnames(dat_out)[col_names_import==col_spec_names] <- "Taxon_orig"
-    if (exists("col_reg_names")) colnames(dat_out)[col_names_import==col_reg_names] <- "Location_orig"
+    if (exists("col_spec_names")) colnames(dat_out)[col_names_import==col_spec_names] <- "taxon_orig"
+    if (exists("col_reg_names")) colnames(dat_out)[col_names_import==col_reg_names] <- "location_orig"
     if (exists("col_kingdom")) colnames(dat_out)[col_names_import==col_kingdom] <- "Kingdom_user"
     if (exists("col_country_code")) colnames(dat_out)[col_names_import==col_country_code] <- "Country_ISO"
     if (exists("col_eventDate_1")) colnames(dat_out)[col_names_import==col_eventDate_1] <- "eventDate"
     if (exists("col_eventDate_2")) colnames(dat_out)[col_names_import==col_eventDate_2] <- "eventDate2"
     if (exists("col_habitat")) colnames(dat_out)[col_names_import==col_habitat] <- "habitat"
-    if (exists("col_references")) colnames(dat_out)[col_names_import==col_references] <- "references"
+    if (exists("col_pathway")) colnames(dat_out)[col_names_import==col_pathway] <- "pathway"
+    if (exists("col_bibliographicCitation")) colnames(dat_out)[col_names_import==col_bibliographicCitation] <- "bibliographicCitation"
     
     if (exists("col_habitat")) dat$habitat <- tolower(dat$habitat)
-    
+
     options(warn=-1)
     rm(col_spec_names,col_reg_names,col_kingdom,col_country_code,col_eventDate_1,
        col_eventDate_2,col_establishmentMeans,col_occurrenceStatus,
-       col_habitat,col_references,col_establishmentMeans,col_occurrenceStatus,
-       col_degreeOfEstablishment,col_degreeOfEstablishment)
+       col_habitat,col_bibliographicCitation,col_establishmentMeans,col_occurrenceStatus,
+       col_degreeOfEstablishment,col_pathway)
     options(warn=1)
     
     ## remove rows with missing taxon and region names
-    dat_out <- dat_out[!dat_out$Location_orig=="",]
-    dat_out <- dat_out[!dat_out$Taxon_orig=="",]
+    dat_out <- dat_out[!dat_out$location_orig=="",]
+    dat_out <- dat_out[!dat_out$taxon_orig=="",]
     
     dat_out$Taxon_group <- FileInfo[i,"Taxon_group"]
     
     colnames(dat_out) <- gsub("\\.+","_",colnames(dat_out))
-    dat_out$Taxon_orig <- gsub("\"","",dat_out$Taxon_orig) # remove additional quotes to avoid difficulties with export
-    dat_out$Taxon_orig <- gsub("\\\\","",dat_out$Taxon_orig) # remove backshlashes
+    dat_out$taxon_orig <- gsub("\"","",dat_out$taxon_orig) # remove additional quotes to avoid difficulties with export
+    dat_out$taxon_orig <- gsub("\\\\","",dat_out$taxon_orig) # remove backshlashes
 
     dat_out <- unique(dat_out) # remove duplicates
     

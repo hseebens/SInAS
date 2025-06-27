@@ -4,10 +4,8 @@
 ##
 ## Run the whole workflow by e.g. copy-pasting "source("runWorkflow.r")" into the R terminal.
 ##
-## sTwist workshop
-## Hanno Seebens, Frankfurt, 06.04.2020
+## Manuela Gómez-Suárez, Hanno Seebens, Gießen, 17.06.2025
 #########################################################################################
-
 
 graphics.off()
 rm(list=ls())
@@ -16,12 +14,12 @@ rm(list=ls())
 library(rgbif) # for checking names, records and taxonomy; note: usage of rgbif may cause warnings like "Unknown or uninitalised column: " which is a bug. Can be ignored.
 library(openxlsx)
 library(data.table)
+library(tidyverse)
 
 ## option for storing the intermediate and final output
-outputfilename <- "SInAS_AlienSpeciesDB" # name of final output file
-# outputfilename <- "CH4_Inv" # name of final output file
+outputfilename <- "SInAS" # name of final output file
 
-version <- "2.4.1" # which version of the database are you going to produce? this will be attached to the end of 'outputfilename'
+version <- "3.0" # which version of the database are you going to produce? this will be attached to the end of 'outputfilename'
 
 output <- T # shall intermediate results be stored to disk? (may overwrite existing files!)
 
@@ -68,4 +66,3 @@ GeteventDate(FileInfo)
 ## merge databases...
 cat("\n Step 6 Merging databases \n")
 MergeDatabases(FileInfo,version,outputfilename,output)
-
