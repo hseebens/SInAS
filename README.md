@@ -1,5 +1,8 @@
-## SInAS workflow: Integration and standardisation of alien species occurrence data
-Author: Hanno Seebens, Frankfurt, 25.06.2025
+## SInAS workflow (vs. 2.0): Integration and standardisation of alien species occurrence data
+Author: Hanno Seebens, Manuela Gómez-Suárez, Giessen-Frankfurt, 25.06.2025
+
+
+
 
 The R scripts contain the implementation of a workflow to standardise and integrate 
 databases of alien species occurrences and years of first record. The workflow is 
