@@ -36,8 +36,8 @@ and the translation tables.
 Please consult the manual (Manual SInAS workflow.pdf) and the following scientific papers 
 for further information. Pleaes cite the respestive scientific paper when using the workflow.
 
-- A global dataset of native and alien distributions of alien species
-Gómez-Suárez, M., Laeseke, P., and Seebens, H. (submitted)
+- Gómez-Suárez, M., Laeseke, P., and Seebens, H. (submitted) A global dataset of native and
+alien distributions of alien species
 
 - Seebens, H., D. A. Clarke, Q. Groom, J. R. U. Wilson, E. García-Berthou, I. Kühn, M. Roigé, 
 S. Pagad, F. Essl, J. Vicente, M. Winter, and M. McGeoch. 2020. A workflow for 
