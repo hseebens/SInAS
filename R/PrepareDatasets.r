@@ -4,11 +4,11 @@
 ## Step 1: Prepare databases of alien taxon distribution and first records
 ## as input datasets to create a merged database
 ## 
-## Hanno Seebens, Gießen, 17.06.2025
+## Hanno Seebens, Giessen, 02.07.2025
 #########################################################################################
 
 
-PrepareDatasets <- function (FileInfo){
+PrepareDatasets <- function (FileInfo=NULL){
   
   ## create output folder #####
   if (!file.exists("Output")){

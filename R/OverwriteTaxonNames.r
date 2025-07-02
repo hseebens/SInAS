@@ -5,11 +5,11 @@
 ##
 ## Replacing taxon names by user-defined list "UserDefinedTaxonNames.xlsx"
 ##
-## Hanno Seebens, Gießen, 17.06.2025
+## Hanno Seebens, Giessen, 17.06.2025
 #########################################################################################
 
 
-OverwriteTaxonNames <- function (FileInfo){
+OverwriteTaxonNames <- function(FileInfo=NULL){
 
   ## identify input datasets based on file name "StandardSpec_....csv"
   allfiles <- list.files(file.path("Output/","Intermediate"))

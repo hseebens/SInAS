@@ -3,11 +3,11 @@
 ##
 ## Step 2a: Standardisation of terminologies using a set of translation tables 
 ##
-## Manuela Gómez-Suárez, Hanno Seebens, Gießen, 17.06.2025
+## Manuela Gómez-Suárez, Hanno Seebens, Giessen, 02.07.2025
 #########################################################################################
 
 
-StandardiseTerms <- function(FileInfo){
+StandardiseTerms <- function(FileInfo=NULL){
   
   ## identify input datasets based on file name "StandardSpec_....csv"
   allfiles <- list.files(file.path("Output","Intermediate"))

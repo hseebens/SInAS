@@ -7,11 +7,11 @@
 ## to access GBIF and treat results is implemented in CheckGBIFTax.r.
 ## Script requires internet connection.
 ##
-## Hanno Seebens, Gießen, 17.06.2025
+## Hanno Seebens, Giessen, 02.07.2025
 #########################################################################################
 
 
-StandardiseTaxonNames <- function (FileInfo){
+StandardiseTaxonNames <- function(FileInfo=NULL){
 
   ## identify input datasets based on file name "StandardColumns_....csv"
   allfiles <- list.files(file.path("Output","Intermediate"))
