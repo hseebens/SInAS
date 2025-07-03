@@ -1,4 +1,4 @@
-## SInAS workflow (vs. 3.0): Integration and standardisation of alien species occurrence data
+## SInAS workflow (vs. 2.0): Integration and standardisation of alien species occurrence data
 Author: Hanno Seebens, Manuela Gómez-Suárez, Giessen-Frankfurt, 01.07.2025
 
 
