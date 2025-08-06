@@ -71,7 +71,7 @@ OverwriteTaxonNames <- function(FileInfo=NULL){
   fullspeclist$taxaGroup <- NA
   fullspeclist$taxaGroup[fullspeclist$scientificName%in%subset(fullspeclist,class=="Mammalia")$scientificName] <- "Mammals"
   fullspeclist$taxaGroup[fullspeclist$scientificName%in%subset(fullspeclist,class=="Aves")$scientificName] <- "Birds"
-  fullspeclist$taxaGroup[fullspeclist$scientificName%in%subset(fullspeclist,class%in%c("Cephalaspidomorphi","Actinopterygii","Elasmobranchii","Sarcopterygii", "Petromyzonti"))$scientificName] <- "Fishes"
+  fullspeclist$taxaGroup[fullspeclist$scientificName%in%subset(fullspeclist,class%in%c("Cephalaspidomorphi","Actinopterygii","Elasmobranchii","Sarcopterygii", "Petromyzonti", "Chondrichthyes", "Myxini"))$scientificName] <- "Fishes"
   fullspeclist$taxaGroup[fullspeclist$scientificName%in%subset(fullspeclist,order%in%c("Polypteriformes", "Acipenseriformes", "Lepisosteiformes", "Amiiformes", "Osteoglossiformes", "Hiodontiformes", 
                                                                          "Elopiformes", "Albuliformes", "Notacanthiformes", "Anguilliformes", "Saccopharyngiformes", "Clupeiformes", "Ceratodontiformes",
                                                                          "Gonorynchiformes", "Cypriniformes", "Characiformes", "Gymnotiformes", "Siluriformes", "Salmoniformes", "Esociformes", 
@@ -85,20 +85,20 @@ OverwriteTaxonNames <- function(FileInfo=NULL){
   fullspeclist$taxaGroup[fullspeclist$scientificName%in%subset(fullspeclist, class%in%c("Insecta"))$scientificName] <- "Insects"
   fullspeclist$taxaGroup[fullspeclist$scientificName%in%subset(fullspeclist, class%in%c("Arachnida", "Pycnogonida"))$scientificName] <- "Arachnids"
   fullspeclist$taxaGroup[fullspeclist$scientificName%in%subset(fullspeclist, class%in%c("Collembola", "Chilopoda", "Diplopoda", "Diplura", "Merostomata", "Pauropoda", "Protura", "Symphyla"))$scientificName] <- "Other arthropods"
-  fullspeclist$taxaGroup[fullspeclist$scientific%in%subset(fullspeclist,class%in%c("Branchiopoda","Hexanauplia","Maxillopoda","Ostracoda","Malacostraca", "Copepoda"))$scientificName] <- "Crustaceans"
-  fullspeclist$taxaGroup[fullspeclist$scientific%in%subset(fullspeclist,family%in%c("Elminiidae"))$scientificName] <- "Crustaceans"
-  fullspeclist$taxaGroup[fullspeclist$scientific%in%subset(fullspeclist,phylum=="Mollusca")$scientificName] <- "Molluscs"
+  fullspeclist$taxaGroup[fullspeclist$scientificName%in%subset(fullspeclist,class%in%c("Branchiopoda","Hexanauplia","Maxillopoda","Ostracoda","Malacostraca", "Copepoda"))$scientificName] <- "Crustaceans"
+  fullspeclist$taxaGroup[fullspeclist$scientificName%in%subset(fullspeclist,family%in%c("Elminiidae"))$scientificName] <- "Crustaceans"
+  fullspeclist$taxaGroup[fullspeclist$scientificName%in%subset(fullspeclist,phylum=="Mollusca")$scientificName] <- "Molluscs"
   fullspeclist$taxaGroup[fullspeclist$scientificName %in% subset(fullspeclist, phylum %in% "Tracheophyta")$scientificName] <- "Vascular plants"
   fullspeclist$taxaGroup[fullspeclist$scientificName%in%subset(fullspeclist,phylum%in%c("Bryophyta","Anthocerotophyta", "Marchantiophyta"))$scientificName] <- "Bryophytes"
-  fullspeclist$taxaGroup[fullspeclist$scientific%in%subset(fullspeclist,phylum%in%c("Rhodophyta","Chlorophyta","Charophyta","Cryptophyta","Haptophyta"))$scientificName] <- "Algae"
-  fullspeclist$taxaGroup[fullspeclist$scientific%in%subset(fullspeclist,phylum%in%c("Ascomycota", "Dothideomycetes", "Sordariomycetes", "Chytridiomycota","Basidiomycota","Microsporidia","Zygomycota", "Entomophthoromycota"))$scientificName] <- "Fungi"
-  fullspeclist$taxaGroup[fullspeclist$scientific%in%subset(fullspeclist,phylum%in%c("Actinobacteria","Chlamydiae","Cyanobacteria","Firmicutes","Proteobacteria"))$scientificName |
+  fullspeclist$taxaGroup[fullspeclist$scientificName%in%subset(fullspeclist,phylum%in%c("Rhodophyta","Chlorophyta","Charophyta","Cryptophyta","Haptophyta"))$scientificName] <- "Algae"
+  fullspeclist$taxaGroup[fullspeclist$scientificName%in%subset(fullspeclist,phylum%in%c("Ascomycota", "Dothideomycetes", "Sordariomycetes", "Chytridiomycota","Basidiomycota","Microsporidia","Zygomycota", "Entomophthoromycota"))$scientificName] <- "Fungi"
+  fullspeclist$taxaGroup[fullspeclist$scientificName%in%subset(fullspeclist,phylum%in%c("Actinobacteria","Chlamydiae","Cyanobacteria","Firmicutes","Proteobacteria"))$scientificName |
                           fullspeclist$class == "Ichthyosporea"] <- "Bacteria and protozoans"
-  fullspeclist$taxaGroup[fullspeclist$scientific%in%subset(fullspeclist,kingdom%in%c("Bacteria", "Protozoa","Euglenozoa"))$scientificName] <- "Bacteria and protozoans"
-  fullspeclist$taxaGroup[fullspeclist$scientific%in%subset(fullspeclist,kingdom%in%c("Viruses"))$scientificName] <- "Viruses"
-  fullspeclist$taxaGroup[fullspeclist$scientific%in%subset(fullspeclist,phylum%in%c("Annelida", "Nematoda", "Platyhelminthes", "Sipuncula", "Nemertea", "Onychophora", "Acanthocephala"))$scientificName] <- "Annelids, nematodes, platyhelminthes, and other worms"
-  fullspeclist$taxaGroup[fullspeclist$scientific%in%subset(fullspeclist,phylum%in%c("Bryozoa", "Entoprocta", "Chaetognatha", "Cnidaria", "Ctenophora", "Echinodermata", "Phoronida", "Porifera", "Rotifera", "Xenacoelomorpha","Brachiopoda"))$scientificName] <- "Other aquatic animals"
-  fullspeclist$taxaGroup[fullspeclist$scientific%in%subset(fullspeclist,class=="Ascidiacea")$scientificName] <- "Other aquatic animals"
+  fullspeclist$taxaGroup[fullspeclist$scientificName%in%subset(fullspeclist,kingdom%in%c("Bacteria", "Protozoa","Euglenozoa"))$scientificName] <- "Bacteria and protozoans"
+  fullspeclist$taxaGroup[fullspeclist$scientificName%in%subset(fullspeclist,kingdom%in%c("Viruses"))$scientificName] <- "Viruses"
+  fullspeclist$taxaGroup[fullspeclist$scientificName%in%subset(fullspeclist,phylum%in%c("Annelida", "Nematoda", "Platyhelminthes", "Sipuncula", "Nemertea", "Onychophora", "Acanthocephala"))$scientificName] <- "Annelids, nematodes, platyhelminthes, and other worms"
+  fullspeclist$taxaGroup[fullspeclist$scientificName%in%subset(fullspeclist,phylum%in%c("Bryozoa", "Entoprocta", "Chaetognatha", "Cnidaria", "Ctenophora", "Echinodermata", "Phoronida", "Porifera", "Rotifera", "Xenacoelomorpha","Brachiopoda"))$scientificName] <- "Other aquatic animals"
+  fullspeclist$taxaGroup[fullspeclist$scientificName%in%subset(fullspeclist,class=="Ascidiacea")$scientificName] <- "Other aquatic animals"
   fullspeclist$taxaGroup[fullspeclist$scientificName%in%subset(fullspeclist, phylum%in%c("Foraminifera","Cercozoa","Ciliophora","Ochrophyta","Oomycota","Myzozoa","Peronosporea", "Bigyra"))$scientificName] <- "SAR"
   fullspeclist$taxaGroup[fullspeclist$scientificName%in%subset(fullspeclist, genus%in%c("Plasmodium"))$scientificName] <- "SAR"
   
