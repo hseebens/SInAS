@@ -2,9 +2,13 @@
 
 ####### SInAS workflow: Integration and standardisation of alien species data ###########
 ##
+## This script executes the SInAS workflow to standardise and integrate alien species 
+## occurrence data. All required files and a manual can be found on GitHub:
+## https://github.com/hseebens/SInAS
+##
 ## Run the whole workflow by e.g. copy-pasting "source("runWorkflow.r")" into the R terminal.
 ##
-## Manuela Gómez-Suárez, Hanno Seebens, Gießen, 17.06.2025
+## Manuela Gómez-Suárez, Hanno Seebens, Gießen, 02.07.2025
 #########################################################################################
 
 graphics.off()

@@ -4,7 +4,7 @@
 ## Step 2c: Standardisation of taxon names
 ## check and replace species names using 'rgibf' GBIF taxonomy
 ##
-## Hanno Seebens, Gießen, 17.06.2025
+## Hanno Seebens, Gießen, 02.07.2025
 #########################################################################################
 
 CheckGBIFTax <- function(taxon_names=NULL,

@@ -3,11 +3,11 @@
 ##
 ## Step 2b: Standardisation of location names using a translation table "AllLocations.xlsx"
 ##
-## Manuela Gómez-Suárez, Hanno Seebens, Gießen, 17.06.2025
+## Manuela Gómez-Suárez, Hanno Seebens, Giessen, 02.07.2025
 #########################################################################################
 
 
-StandardiseLocationNames <- function(FileInfo){
+StandardiseLocationNames <- function(FileInfo=NULL){
   
   ## identify input datasets based on file name "StandardSpec_....csv"
   allfiles <- list.files(file.path("Output","Intermediate"))

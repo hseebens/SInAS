@@ -3,11 +3,14 @@
 ##
 ## Step 3: Merging of standardised databases of alien species data
 ##
-## Manuela Gómez-Suárez, Hanno Seebens, Gießen, 17.06.2025
+## Manuela Gómez-Suárez, Hanno Seebens, Giessen, 17.06.2025
 #########################################################################################
 
 
-MergeDatabases <- function(FileInfo,version,outputfilename,output){
+MergeDatabases <- function(FileInfo=NULL, 
+                           version=NULL,
+                           outputfilename=NULL,
+                           output=NULL){
   
   ## identify input datasets based on file name "StandardSpec_....csv"
   allfiles <- list.files(file.path("Output","Intermediate"))

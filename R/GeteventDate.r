@@ -6,11 +6,11 @@
 ## Event dates are modified according to a set of rules defined in "Guidelines_eventDates.xlsx",
 ## then converted to numerics and - if necessary - merged to get single first records.
 ##
-## Hanno Seebens, Gießen, 17.06.2025
+## Hanno Seebens, Gießen, 02.07.2025
 #########################################################################################################
 
 
-GeteventDate <- function(FileInfo){
+GeteventDate <- function(FileInfo=NULL){
  
   ## identify input datasets based on file name "StandardSpec_....csv"
   allfiles <- list.files(file.path("Output","Intermediate"))
