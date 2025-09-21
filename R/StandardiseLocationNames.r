@@ -21,16 +21,32 @@ StandardiseLocationNames <- function(FileInfo=NULL){
   
   ## load location tables #################################################
   # load table with countries (i.e. regions)
-  regions <- read.xlsx(file.path("Config", "AllLocations.xlsx"), sheet = 2, na.strings = "") # Sheet with first aggregation level (i.e. countries)
+  regions <- read.xlsx(file.path("Config", "AllLocations.xlsx"), sheet = "location", na.strings = "") # Sheet with first aggregation level (i.e. countries)
   regions <- regions[, c("locationID", "location", "location_var")]
   regions$location_var <- tolower(regions$location_var)  # Set all to lowercase for matching
   regions$location_lower <- tolower(regions$location)  # Set all to lowercase for matching
   
   # load table with state, provinces, departments, etc... (i.e. subregions)
-  subregions <- read.xlsx(file.path("Config", "AllLocations.xlsx"), sheet = 3, na.strings = "") # Sheet with second aggregation level (i.e. states, provinces...)
+  subregions <- read.xlsx(file.path("Config", "AllLocations.xlsx"), sheet = "stateProvince", na.strings = "") # Sheet with second aggregation level (i.e. states, provinces...)
   subregions <- subregions[, c("locationID", "location", "location_var", "gadm1_name", "gadm1_var")]
   subregions$gadm1_var <- tolower(subregions$gadm1_var)  # Set all to lowercase for matching
   subregions$Gadm1_lower <- tolower(subregions$gadm1_name)  # Set all to lowercase for matching
+  
+  # add variations of gadm1_var: "subregion, region"
+  subregions$combined_name <- tolower(paste(subregions$gadm1_name, subregions$location, sep = ", ")) # combine 'gadm1_name' and 'location'
+  subregions$parenthesis_name <- tolower(paste(subregions$gadm1_name, " (", subregions$location, ")", sep = "")) # combine 'gadm1_name' and '(location)'
+  
+  # Make sure any existing NA values in gadm1_var are interpreted as empty strings for concatenation
+  subregions$gadm1_var <- ifelse(is.na(subregions$gadm1_var), "", subregions$gadm1_var)
+  
+  # Concatenate new variations
+  subregions$gadm1_var <- ifelse(
+    subregions$gadm1_var == "",
+    paste(subregions$combined_name, subregions$parenthesis_name, sep = "; "),
+    paste(subregions$gadm1_var, subregions$combined_name, subregions$parenthesis_name, sep = "; ")
+  )
+  
+  subregions <- select(subregions, -c(combined_name, parenthesis_name))
   
   # Get duplicated names of subregions  
   dup <- unique(gsub("\\s*\\(.*?\\)", "", subregions$gadm1_name)[duplicated(gsub("\\s*\\(.*?\\)", "", subregions$gadm1_name))])
@@ -89,6 +105,7 @@ StandardiseLocationNames <- function(FileInfo=NULL){
       }
     }
     
+    
     ## Merge both data frames with standardized locations names ('region' and 'subregion')
     dat_match1 <- full_join(dat_match_subregions, 
                             dat_match_regions |> select(order, locationID, location), 
@@ -97,7 +114,7 @@ StandardiseLocationNames <- function(FileInfo=NULL){
              location = coalesce(location.x, location.y))|> 
       select(-locationID.x, -locationID.y, -location.x, -location.y, -location_var, -gadm1_var)
     
-    
+
     ## final merging of both data sets with standardized region names to original data
     dat_match1 <- dat_match1[order(dat_match1$order),]
     if (!identical(dat_match1$taxon_orig,dat$taxon_orig)) stop("Data sets not sorted equally!")
@@ -128,7 +145,6 @@ StandardiseLocationNames <- function(FileInfo=NULL){
     write_regnames <- write_regnames |> 
       select(-c(stateProvince, locationID)) |> 
       left_join(regions |> select(location, locationID), by = "location")
-
     
     ## output ###############################################################################
     
@@ -151,7 +167,7 @@ StandardiseLocationNames <- function(FileInfo=NULL){
     }
     reg_names <- reg_names[reg_names$location!=reg_names$location_orig,] # export only region names deviating from the original
     reg_names <- unique(reg_names[order(reg_names$location),])
-    colnames(reg_names) <- c("location","location_orig","origDB")
+    colnames(reg_names) <- c("location","location_orig","datasetName")
     
     # Clean locations and locationID 
     reg_names  <- reg_names |> left_join(regions |> select(location, locationID), by = "location")

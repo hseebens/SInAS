@@ -90,14 +90,14 @@ GeteventDate <- function(FileInfo=NULL){
           out_translated$note <- NA
           ind <- (out_translated$eventDate2 - out_translated$eventDate)<0
           out_translated[which(ind),]$note <- "eventDate2 lies before eventDate"
-          out_translated$origDB  <- FileInfo[i,1]
+          out_translated$datasetName  <- FileInfo[i,1]
           flag_eventDate2_exists <- T
         }
       } else {
         out_translated <- unique(dat[dat$eventDate!=dat$eventDate_orig,c("eventDate","eventDate_orig")])
         if (nrow(out_translated)>0){  # avoid situation of adding empty data sets
           out_translated$note <- NA
-          out_translated$origDB  <- FileInfo[i,1]
+          out_translated$datasetName  <- FileInfo[i,1]
           if (flag_eventDate2_exists) {
             out_translated$eventDate2      <- NA
             out_translated$eventDate2_orig <- NA
