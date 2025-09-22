@@ -353,7 +353,7 @@ CheckGBIFTax <- function(taxon_names=NULL,
         next # jump to next taxon
         
       }
-    } else if (any(alternatives$status=="SYNONYM" & alternatives$matchType=="EXACT" & any(colnames(alternatives)=="species"))) { # check for synonyms in 'alternatives'
+    } else if (any(alternatives$status=="SYNONYM" & alternatives$matchType=="EXACT" & any(colnames(db)=="species"))) { # check for synonyms in 'alternatives'
 
       ## check alternative names #################################################################################
       
