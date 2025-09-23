@@ -25,6 +25,9 @@ MergeDatabases <- function(FileInfo=NULL,
   # specify dedicated databases on alien species to fill out establishmentMeans when this information is not already given by the database 
   alienDB <- c("FirstRecords", "GAVIA", "MacroFungi", "GRIIS", "DAMA", "AmphRep", "GloNAF") # Databases only including data on alien species
   
+  ## HANNO: Such a selection like alienDB should not be hard-coded within a function. A user needs to remember that line and change in the function, which is not ideal.
+  ## If there is something to select, this should be done outside the function (here in the runWorkflow.r) with an option in the function call.
+  
   ## merge columns #######################################
   
   for (i in 1:length(inputfiles)){#
