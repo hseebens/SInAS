@@ -127,7 +127,7 @@ StandardiseLocationNames <- function(FileInfo=NULL){
     if (any(dat$location_orig %in% dup)) {
       # Extract the matching names from dat$location_orig
       matching_names <- unique(dat$location_orig[dat$location_orig %in% dup])
-      warning(paste(
+      cat(paste(
         "\n    Warning: Unresolved terms in ",FileInfo[i,"Dataset_brief_name"],".The following location name(s) correspond to multiple subregions in the world:",
         paste(matching_names, collapse = ", "),
         ". Please modify the original location name(s) by including the country name in parentheses(), and try again (e.g: Amazonas (Colombia)) \n"
