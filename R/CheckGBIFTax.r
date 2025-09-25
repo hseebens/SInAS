@@ -216,7 +216,7 @@ CheckGBIFTax <- function(taxon_names=NULL,
         }
         
         ## select entries from cross-taxonomic databases from certain taxa
-        if (any(colnames(dat)=="Taxon_group")) { # !!!!! new line
+        if (any(colnames(dat)=="Taxon_group")) { 
           if (unique(dat$Taxon_group)!="All"){ # check if 'Taxon_group' provides useful information
             if (grepl("Vascular plants",unique(dat$Taxon_group))){ # case of vascular plants
               
@@ -327,7 +327,7 @@ CheckGBIFTax <- function(taxon_names=NULL,
               try(dat$kingdom[ind_tax]     <- alternatives[alternatives$status=="ACCEPTED" & alternatives$matchType=="EXACT" & alternatives$class=="Mammalia",]$kingdom[1],silent=T)
             }
           }
-        } # !!!!! new line
+        } 
       } else {
         
         ## case: a single accepted name in "alternatives" 

@@ -1,5 +1,3 @@
-#!/usr/bin/env Rscript
-
 ####### SInAS workflow: Integration and standardisation of alien species data ###########
 ##
 ## This script executes the SInAS workflow to standardise and integrate alien species 
