@@ -6,18 +6,20 @@
 ## Event dates are modified according to a set of rules defined in "Guidelines_eventDates.xlsx",
 ## then converted to numerics and - if necessary - merged to get single first records.
 ##
-## Hanno Seebens, Gießen, 02.07.2025
+## Hanno Seebens, Gießen, 25.09.2025
 #########################################################################################################
 
 
 GeteventDate <- function(FileInfo=NULL){
- 
+  
+  ## load data ################################
+  
   ## identify input datasets based on file name "StandardSpec_....csv"
   allfiles <- list.files(file.path("Output","Intermediate"))
   inputfiles_all <- allfiles[grep("Step4_StandardTaxonNames_",allfiles)]
+  
   inputfiles <- vector()
   for (i in 1:nrow(FileInfo)){
-    # inputfiles <- c(inputfiles,grep(FileInfo[i,"Dataset_brief_name"],inputfiles_all,value=T))
     inputfiles <- c(inputfiles,paste("Step4_StandardTaxonNames_",FileInfo[i,"Dataset_brief_name"],".csv",sep=""))
   }
   inputfiles <- inputfiles[!is.na(inputfiles)]
@@ -25,7 +27,7 @@ GeteventDate <- function(FileInfo=NULL){
   replacements <- read.xlsx(file.path("Config","Guidelines_eventDates.xlsx"))
   replacements$Replacement[is.na(replacements$Replacement)] <- ""
   
-  ## loop over databases ##########
+  ## loop over datasets ######################
   
   translated_eventDates <- list()
   flag_eventDate2_exists <- F
@@ -61,7 +63,6 @@ GeteventDate <- function(FileInfo=NULL){
       if (any(colnames(dat)=="eventDate2")){
   
         for (j in 1:nrow(replacements)){
-          # dat$eventDate2 <- gsub(replacements$Entry[j],replacements$Replacement[j],dat$eventDate2)
           dat$eventDate2[dat$eventDate2==replacements$Entry[j]] <- replacements$Replacement[j]
         }
         dat$eventDate2 <- gsub("^\\s+|\\s+$", "",dat$eventDate2) # trim leading and trailing whitespace
@@ -71,7 +72,7 @@ GeteventDate <- function(FileInfo=NULL){
         firstrec_test <- firstrec_test[!is.na(firstrec_test)]
         suppressWarnings( first2 <- as.numeric(firstrec_test))
         if (any(is.na(first2))){
-          nonnumeric <- c(nonnumeric,unique(firstrec_test[is.na(first2)])) # collect non-numeric entries
+          nonnumeric <- c(nonnumeric,unique(firstrec_test[is.na(first2)])) # collect non-numeric entries for cross-checking
         } 
     
         ## convert first records to numeric
@@ -83,7 +84,7 @@ GeteventDate <- function(FileInfo=NULL){
         dat$eventDate[diff_records] <- round(rowMeans(dat[diff_records,c("eventDate","eventDate2")]))
       } 
       
-      ## prepare output #####
+      ## check output and flag issues #####
       if (any(colnames(dat)=="eventDate2")){
         out_translated <- unique(dat[dat$eventDate!=dat$eventDate_orig | dat$eventDate2!=dat$eventDate_orig,c("eventDate","eventDate2","eventDate_orig","eventDate2_orig")])
         if (nrow(out_translated)>0){  # avoid situation of adding empty data sets
@@ -112,6 +113,7 @@ GeteventDate <- function(FileInfo=NULL){
 
     ## Output #######################################
     
+    ## store entries which could not be treated
     if (length(nonnumeric)>0){
       cat(paste("\n    Warning: First records in",FileInfo[i,1],"contain non-numeric symbols. Converted to missing values. \n"))
       write.table(nonnumeric,file.path("Output","Check",paste0("NonNumeric_eventDates_",FileInfo[i,"Dataset_brief_name"],".csv")),row.names=F,col.names=F)
@@ -121,6 +123,7 @@ GeteventDate <- function(FileInfo=NULL){
     
   }
   
+  ## 
   if (length(translated_eventDates)>0){
     all_translated <- unique(do.call("rbind",translated_eventDates))
     write.table(all_translated,file.path("Output","Translated_eventDates.csv"),row.names=F)
