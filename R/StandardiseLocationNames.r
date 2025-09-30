@@ -117,7 +117,7 @@ StandardiseLocationNames <- function(FileInfo=NULL){
 
     ## final merging of both data sets with standardized region names to original data
     dat_match1 <- dat_match1[order(dat_match1$order),]
-    if (!identical(dat_match1$taxon_orig,dat$taxon_orig)) stop("Data sets not sorted equally!")
+    if (!identical(dat_match1$verbatimTaxonRank,dat$verbatimTaxonRank)) stop("Data sets not sorted equally!")
     
     dat$locationID <- dat_match1$locationID
     dat$location <- dat_match1$location

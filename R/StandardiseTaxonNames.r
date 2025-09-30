@@ -36,14 +36,14 @@ StandardiseTaxonNames <- function(FileInfo=NULL){
     dat <- dat[,!colnames(dat)%in%c("location_orig")]
     
     # remove white space #######################################
-    dat$taxon_orig <- gsub("  "," ",dat$taxon_orig)
-    dat$taxon_orig <- gsub("^\\s+|\\s+$", "",dat$taxon_orig) # trim leading and trailing whitespace
-    dat$taxon_orig <- gsub("[$\xc2\xa0]", " ",dat$taxon_orig) # replace weird white space with recognised white space
-    dat$taxon_orig <- gsub("  "," ",dat$taxon_orig)
-    dat$taxon_orig <- gsub("\n"," ",dat$taxon_orig)
+    dat$verbatimTaxonRank <- gsub("  "," ",dat$verbatimTaxonRank)
+    dat$verbatimTaxonRank <- gsub("^\\s+|\\s+$", "",dat$verbatimTaxonRank) # trim leading and trailing whitespace
+    dat$verbatimTaxonRank <- gsub("[$\xc2\xa0]", " ",dat$verbatimTaxonRank) # replace weird white space with recognised white space
+    dat$verbatimTaxonRank <- gsub("  "," ",dat$verbatimTaxonRank)
+    dat$verbatimTaxonRank <- gsub("\n"," ",dat$verbatimTaxonRank)
     
-    dat <- dat[!is.na(dat$taxon_orig),]
-    dat <- dat[dat$taxon_orig!="",]
+    dat <- dat[!is.na(dat$verbatimTaxonRank),]
+    dat <- dat[dat$verbatimTaxonRank!="",]
     
     #### standardise taxon names against GBIF backbone taxonomy ###
 
@@ -56,7 +56,7 @@ StandardiseTaxonNames <- function(FileInfo=NULL){
     mismatches <- dat[[2]]
     
     ## export full species list with original species names and names assigned by GBIF for checking
-    fullspeclist <- rbind(fullspeclist,unique(DB[,c("taxon_orig","taxon","scientificName","GBIFstatus","GBIFstatus_Synonym","GBIFmatchtype","GBIFtaxonRank","GBIFusageKey","GBIFnote","species","genus","family","order","class","phylum","kingdom")]))
+    fullspeclist <- rbind(fullspeclist,unique(DB[,c("verbatimTaxonRank","taxon","scientificName","GBIFstatus","GBIFstatus_Synonym","GBIFmatchtype","GBIFtaxonRank","GBIFusageKey","GBIFnote","species","genus","family","order","class","phylum","kingdom")]))
     
     DB <- unique(DB) # remove duplicates
     DB$GBIFstatus[is.na(DB$GBIFstatus)] <- "NoMatch"
@@ -96,10 +96,10 @@ StandardiseTaxonNames <- function(FileInfo=NULL){
   
   ## add taxon ID to data sets ##########
   
-  taxon_id <- unique(fullspeclist_2[,c("taxonID","taxon_orig")])
+  taxon_id <- unique(fullspeclist_2[,c("taxonID","verbatimTaxonRank")])
   for (i in 1:length(inputfiles)){ # loop over inputfiles 
     dat <- read.table(file.path("Output","Intermediate",paste0("Step4_StandardTaxonNames_",FileInfo[i,"Dataset_brief_name"],".csv")),header=T,stringsAsFactors = F)
-    dat <- merge(dat,taxon_id,by="taxon_orig",all.x=T)
+    dat <- merge(dat,taxon_id,by="verbatimTaxonRank",all.x=T)
     
     ## save intermediate output all data sets 
     write.table(dat,file.path("Output","Intermediate",paste0("Step4_StandardTaxonNames_",FileInfo[i,"Dataset_brief_name"],".csv")),row.names=F)

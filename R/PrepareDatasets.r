@@ -165,7 +165,7 @@ PrepareDatasets <- function(FileInfo=NULL){
     
     ## standardise column names
     col_names_import <- colnames(dat_out)
-    if (exists("col_spec_names")) colnames(dat_out)[col_names_import==col_spec_names] <- "taxon_orig"
+    if (exists("col_spec_names")) colnames(dat_out)[col_names_import==col_spec_names] <- "verbatimTaxonRank"
     if (exists("col_reg_names")) colnames(dat_out)[col_names_import==col_reg_names] <- "location_orig"
     if (exists("col_kingdom")) colnames(dat_out)[col_names_import==col_kingdom] <- "Kingdom_user"
     if (exists("col_country_code")) colnames(dat_out)[col_names_import==col_country_code] <- "Country_ISO"
@@ -189,13 +189,13 @@ PrepareDatasets <- function(FileInfo=NULL){
     
     ## remove rows with missing taxon and region names
     dat_out <- dat_out[!dat_out$location_orig=="",]
-    dat_out <- dat_out[!dat_out$taxon_orig=="",]
+    dat_out <- dat_out[!dat_out$verbatimTaxonRank=="",]
     
     dat_out$Taxon_group <- FileInfo[i,"Taxon_group"]
     
     colnames(dat_out) <- gsub("\\.+","_",colnames(dat_out))
-    dat_out$taxon_orig <- gsub("\"","",dat_out$taxon_orig) # remove additional quotes to avoid difficulties with export
-    dat_out$taxon_orig <- gsub("\\\\","",dat_out$taxon_orig) # remove back shlashes
+    dat_out$verbatimTaxonRank <- gsub("\"","",dat_out$verbatimTaxonRank) # remove additional quotes to avoid difficulties with export
+    dat_out$verbatimTaxonRank <- gsub("\\\\","",dat_out$verbatimTaxonRank) # remove back shlashes
 
     dat_out <- unique(dat_out) # remove duplicates
     

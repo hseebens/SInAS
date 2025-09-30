@@ -22,12 +22,6 @@ MergeDatabases <- function(FileInfo=NULL,
   }
   inputfiles <- inputfiles[!is.na(inputfiles)]
   
-  # specify dedicated databases on alien species to fill out establishmentMeans when this information is not already given by the database 
-  alienDB <- c("FirstRecords", "GAVIA", "MacroFungi", "GRIIS", "DAMA", "AmphRep", "GloNAF") # Databases only including data on alien species
-  
-  ## HANNO: Such a selection like alienDB should not be hard-coded within a function. A user needs to remember that line and change in the function, which is not ideal.
-  ## If there is something to select, this should be done outside the function (here in the runWorkflow.r) with an option in the function call.
-  
   ## merge columns #######################################
   
   for (i in 1:length(inputfiles)){#
@@ -35,53 +29,43 @@ MergeDatabases <- function(FileInfo=NULL,
     dat <- read.table(file.path("Output","Intermediate",paste0(inputfiles[i])),header=T,stringsAsFactors = F)
 
     cnames <- colnames(dat)
-    cnames <- cnames[!cnames%in%c("taxon_orig","location_orig","Kingdom_user","Country_ISO","ISO3","eventDate_orig","Taxon_group")]
+    cnames <- cnames[!cnames%in%c("verbatimTaxonRank","location_orig","Kingdom_user","Country_ISO","ISO3","eventDate_orig","Taxon_group")]
     dat <- dat[,colnames(dat)%in%cnames]
 
     dat$datasetName <- FileInfo[i,1]
     
     # remove records whose location could not be standardized 
     dat <- dat[!is.na(dat$locationID), ]
-    
-
-    # update establishmentMeans for entries without information based on source
-    
-    # Create empty establishmentMeans column if there is none present in "dat"
-    if (!"establishmentMeans" %in% colnames(dat)) {
-      dat$establishmentMeans <- NA  # Create an empty column
-    }
-    
-    # Check for presence of any `establishmentMeans`-related columns
-    if (any(grepl("establishmentMeans", cnames))) {
-      # Update existing `establishmentMeans` columns
-      est_means_cols <- grep("^establishmentMeans", cnames, value = TRUE)
-      for (col in est_means_cols) {
-        dat[[col]] <- ifelse(dat[[col]] == "" & str_detect(dat$datasetName, paste(alienDB, collapse = "|")), 
-                             "introduced", dat[[col]])
-      }
-    } else {
-      # Create a new `establishmentMeans` column if none exist and fill as "introduced" after the dedicated databases for alien distributions
-      dat$establishmentMeans <- ifelse(str_detect(dat$datasetName, paste(alienDB, collapse = "|")), 
-                                       "introduced", "")
-    }
  
     # check each source before merging and remove records which are flagged as absent, 
-    # if a present record for that species and location is available
+    # if a present record for that taxon and location is available
     
     if (any(grepl("occurrenceStatus", cnames))) { # check availability of occurrenceStatus information
       
-      # Step 1: Create abs_records to keep only "absent" records (no conflict with other DBs)
-      abs_records <- dat %>%
+      # create abs_records twice (for alien and for native) to keep only "absent" records (for later removal) 
+      #if a taxon is reported as both present and absent in the same location (no conflict with other DBs)
+      
+      # for introduced records
+      abs_int_records <- dat %>%
         filter(establishmentMeans %in% c("uncertain", "introduced")) %>% 
         group_by(location, locationID, taxonID, taxon) %>%
-        filter(all(c("absent", "present") %in% occurrenceStatus)) %>% # keep records where a species in a location is flagged as both absent and present
+        filter(all(c("absent", "present") %in% occurrenceStatus)) %>% # keep records where a taxon in a location is flagged as both absent and present
         filter(occurrenceStatus == "absent") %>% # keep absent record to remove it in a later step
         ungroup()
       
-      # Step 2: Remove the absent records from the each standardized dataset/source
-      ## HANNO: This comment sounds like all absent records are being removed. Is that true?
+      # for native records 
+      abs_nat_records <- dat %>%
+        filter(establishmentMeans %in% "native") %>% 
+        group_by(location, locationID, taxonID, taxon) %>%
+        filter(all(c("absent", "present") %in% occurrenceStatus)) %>% # keep records where a taxon in a location is flagged as both absent and present
+        filter(occurrenceStatus == "absent") %>% # keep absent record to remove it in a later step
+        ungroup()
+      
+      # remove the absent record if there is already a present record for a taxon in a location
       dat <- dat %>%
-        anti_join(abs_records, by = c("location", "locationID", "taxonID", "taxon", "occurrenceStatus")) # remove records filtered in abs_records
+        anti_join(abs_int_records, by = c("location", "locationID", "taxonID", "taxon", "establishmentMeans", "occurrenceStatus"))
+      dat <- dat %>%
+        anti_join(abs_nat_records, by = c("location", "locationID", "taxonID", "taxon", "establishmentMeans", "occurrenceStatus"))
     }
     
     if (i == 1) {
@@ -105,19 +89,6 @@ MergeDatabases <- function(FileInfo=NULL,
         }
       }
       
-      ## after merging, remove "absent" records if a "present" record is already available
-      ## Check for ".x" and ".y" columns after merging
-      if ("occurrenceStatus.x" %in% colnames(alldat) & "occurrenceStatus.y" %in% colnames(alldat)) {
-        alldat <- alldat %>%
-          mutate(
-            # If .x is present and .y is absent, clear .y entries
-            across(ends_with(".y"), ~ ifelse(occurrenceStatus.x == "present" & occurrenceStatus.y == "absent", NA, .)),
-            # If .x is absent and .y is present, clear .x entries
-            across(ends_with(".x"), ~ ifelse(occurrenceStatus.x == "absent" & occurrenceStatus.y == "present", NA, .))
-          )
-      }
-
-      # 
       alldat <- alldat %>%
         mutate(across(starts_with("eventDate"), as.character))
       
@@ -131,20 +102,7 @@ MergeDatabases <- function(FileInfo=NULL,
           alldat$eventDate <- apply(alldat[,c("eventDate.x","eventDate.y")],1,function(s) ifelse(all(is.na(s)),NA,min(s,na.rm=T)))
           alldat <- alldat[,!colnames(alldat)%in%c("eventDate.x","eventDate.y")]
         }
-        
-      ## clean records flagged as both: introduced and uncertain
-      alldat <- alldat %>%
-        group_by(location, locationID, taxon, scientificName, taxonID) %>%
-        mutate(no_native_column = !any(establishmentMeans == "native")) %>% # Create a flag for when "native" is absent in the group
-        ungroup()
       
-      ## Reframe based on the created flag
-      ## HANNO: Can you clarify what is reframed and done here?
-      alldat <- alldat %>%
-        group_by(location, locationID, taxon, scientificName, taxonID, no_native_column) %>%
-        reframe(across(everything(), ~ if (first(no_native_column)) paste(unique(.x), collapse = "; ") else .x)) %>% # merge all records which are not flagged as native (i.e. introduced + uncertain)
-        select(-no_native_column)
-        
         while(any(grepl("\\.y",colnames(alldat)))){ # check if discrepancy still exists
           colname_dupl <- colnames(alldat)[grep("\\.y",colnames(alldat))][1] # identify duplicated column
           colname_dupl <- gsub("\\..+$","",colname_dupl) # create new column new
@@ -154,12 +112,34 @@ MergeDatabases <- function(FileInfo=NULL,
           eval(parse(text=paste0("alldat$",substitute(a,list(a=colname_dupl)),"<-paste(alldat$",substitute(a,
                         list(a=colname_dupl)),".x,alldat$",substitute(a,list(a=colname_dupl)),".y,sep=\"; \")"))) # add column with database information
           alldat <- alldat[,!colnames(alldat)%in%colnames_dupl] # remove .x and .y columns
+
         }
       }
     }
+    
+   ## merge records flagged as both: introduced and uncertain
+    alldat <- alldat %>%
+      mutate(dist_group = case_when( # create establishmentMeans groups for merging
+        establishmentMeans == "introduced" ~ "a",
+        establishmentMeans == "uncertain" ~ "a",
+        establishmentMeans == "native" ~ "b",
+        establishmentMeans == "vagrant" ~ "c",
+        TRUE ~ NA_character_  # Assign NA for any other values
+      ))
+    
+    # ## reframe (i.e. mutate) based on the created flag
+    alldat <- alldat %>%
+      reframe(.by = c(location, locationID, taxon, scientificName, taxonID, dist_group), # group by taxon, location, and dist_group 
+              across(everything(),  # concatenate values across all other columns after the defined grouping (taxon, location, and dist_group)
+                     ~ paste(unique(.x), collapse = "; ")  # concatenate unique values  
+      )) %>%
+      select(-dist_group)  # Remove custom column to flag records
   }
 
   #### merge rows ############################
+  
+  # clean occurrenceStatus for taxa reported as both absent and present in a location (for conflict between DBs)
+  alldat$occurrenceStatus <- ifelse(alldat$occurrenceStatus == "absent; present", "present", alldat$occurrenceStatus)
   
   ## merge remaining content of rows defined by the "by" statement
   dt <- as.data.table(alldat)
@@ -184,17 +164,11 @@ MergeDatabases <- function(FileInfo=NULL,
     alldat[,i] <- gsub("^NA$","",alldat[,i]) # clean new column
   }
   
-  # clean occurrenceStatus column 
-  # if a record from a single database is still classified as absent and present, replace it as only present
-  alldat <- alldat %>%
-    mutate(
-      occurrenceStatus = ifelse(
-        occurrenceStatus == "absent; present" & !grepl(";", datasetName),
-        "present",
-        occurrenceStatus
-      )
-    )
-
+  ## select minimum first record
+  ind_dupl_fr <- grep("; ",alldat$eventDate)
+  single_fr <- lapply(strsplit(alldat$eventDate[ind_dupl_fr],"; "),function(s) min(as.integer(s)))
+  alldat$eventDate[ind_dupl_fr] <- unlist(single_fr)
+  
   ## remove duplicated entries
   ind_dupl <- duplicated(alldat) # remove identical lines
   alldat <- alldat[!ind_dupl,]
@@ -206,10 +180,10 @@ MergeDatabases <- function(FileInfo=NULL,
   ind_rm <- col_dupl <- vector()
   for (j in 1:nrow(all_dat_dupl)){ # loop over duplicated entries
     
-    ind_each <- which(alldat$taxon == all_dat_dupl$taxon[j] & alldat$location == all_dat_dupl$location[j])
+    ind_each <- which(alldat$taxon == all_dat_dupl$taxon[j] & alldat$location == all_dat_dupl$location[j] & alldat$establishmentMeans == all_dat_dupl$establishmentMeans[j])
 
     for (k in 1:dim(alldat)[2]){ # loop over columns
-      if (colnames(alldat)[k]%in%c("location", "stateProvince","locationID","taxon","scientificName","taxonID","establishmentMeans")) next # ignore these columns
+      if (colnames(alldat)[k]%in%c("location","locationID","taxon","scientificName","taxonID","establishmentMeans")) next # ignore these columns
       if (all(is.na(alldat[ind_each,k]))) next # skip if all NA
       if (all(duplicated(alldat[ind_each,k])[-1])){ # skip if all equal (non-NA)
         next 
@@ -233,11 +207,6 @@ MergeDatabases <- function(FileInfo=NULL,
   }
   if (length(ind_rm)>0) alldat <- alldat[-unique(ind_rm),] # remove all duplicates
   if (length(col_dupl)>0) cat(paste0("\n    Note: Multiple entries for the same record. Check column '",unique(col_dupl),"' in final data set for entries separated by ';'. \n"))
-
-  ## select minimum first record
-  ind_dupl_fr <- grep("; ",alldat$eventDate)
-  single_fr <- lapply(strsplit(alldat$eventDate[ind_dupl_fr],"; "),function(s) min(as.integer(s)))
-  alldat$eventDate[ind_dupl_fr] <- unlist(single_fr)
   
   # fill habitat column
   alldat <- alldat %>%

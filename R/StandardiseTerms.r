@@ -51,6 +51,16 @@ StandardiseTerms <- function(FileInfo=NULL){
     ## Standardisation of terms ############################
     
     ## Darwin Core: establishmentMeans
+    
+    # create establishmentMeans column if missing from the dataset
+    if (!"establishmentMeans" %in% colnames(dat)) {
+      dat$establishmentMeans <- NA  # Create an empty column if it does not exist
+    }
+    
+    # get the scope of the current dataset
+    dataset_scope <- FileInfo[i, "Dataset_scope"]
+
+    # clean and standardize other entries in establishmentMeans
     if (any(colnames(dat)=="establishmentMeans")){
       
       dat$establishmentMeans <- gsub("^\\s+|\\s+$", "",dat$establishmentMeans) # trim leading and trailing whitespace
@@ -67,6 +77,15 @@ StandardiseTerms <- function(FileInfo=NULL){
       ind <- match(tolower(dat$establishmentMeans),tolower(translation_estabmeans$newTerm)) # identify matches with Darwin Core
       dat$establishmentMeans <- translation_estabmeans$newTerm[ind] # replace strings
       dat$establishmentMeans[is.na(ind)] <- "" # indicate mis-matches
+      
+      
+      # fill establishmentMeans if the record has no information according to the scope of the dataset
+      # if dataset_scope == "alien; native" or "NA" the column does not get filled
+      if (dataset_scope == "native") {
+        dat$establishmentMeans[is.na(dat$establishmentMeans) | dat$establishmentMeans == ""] <- "native"
+      } else if (dataset_scope == "alien") {
+        dat$establishmentMeans[is.na(dat$establishmentMeans) | dat$establishmentMeans == "" | dat$establishmentMeans == " "] <- "introduced"
+      } 
     }
 
     ## Darwin Core: occurrenceStatus ####
