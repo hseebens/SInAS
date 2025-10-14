@@ -18,7 +18,7 @@ CheckGBIFTax <- function(taxon_names=NULL,
   } else if (is.character(taxon_names)){ # check if input file is a vector
     
     dat <- as.data.frame(taxon_names)
-    colnames(dat) <- "taxon_orig"
+    colnames(dat) <- "verbatimTaxonRank"
     
   } else if (is.data.frame(taxon_names)){ # check if input file is a data.frame
     
@@ -32,17 +32,17 @@ CheckGBIFTax <- function(taxon_names=NULL,
   
   if (!is.null(column_name_taxa)){ # check if column name of taxa provided
     
-    colnames(dat)[colnames(dat)==column_name_taxa] <- "taxon_orig" # rename to standard column name
+    colnames(dat)[colnames(dat)==column_name_taxa] <- "verbatimTaxonRank" # rename to standard column name
     
   }
-  if (all(colnames(dat)!="taxon_orig")){ # check if column "taxon_orig" can be found
+  if (all(colnames(dat)!="verbatimTaxonRank")){ # check if column "verbatimTaxonRank" can be found
     
     stop("No column with taxon names found. Please specify in column_name_taxa.")
     
   }
   
   dat$scientificName <- NA
-  dat$taxon <- dat$taxon_orig
+  dat$taxon <- dat$verbatimTaxonRank
   dat$GBIFstatus <- "MISSING"
   dat$GBIFmatchtype <- NA
   dat$GBIFnote <- NA
@@ -216,7 +216,7 @@ CheckGBIFTax <- function(taxon_names=NULL,
         }
         
         ## select entries from cross-taxonomic databases from certain taxa
-        if (any(colnames(dat)=="Taxon_group")) { # !!!!! new line
+        if (any(colnames(dat)=="Taxon_group")) { 
           if (unique(dat$Taxon_group)!="All"){ # check if 'Taxon_group' provides useful information
             if (grepl("Vascular plants",unique(dat$Taxon_group))){ # case of vascular plants
               
@@ -327,7 +327,7 @@ CheckGBIFTax <- function(taxon_names=NULL,
               try(dat$kingdom[ind_tax]     <- alternatives[alternatives$status=="ACCEPTED" & alternatives$matchType=="EXACT" & alternatives$class=="Mammalia",]$kingdom[1],silent=T)
             }
           }
-        } # !!!!! new line
+        } 
       } else {
         
         ## case: a single accepted name in "alternatives" 

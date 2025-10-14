@@ -33,32 +33,32 @@ OverwriteTaxonNames <- function(FileInfo=NULL){
     dat <- read.table(file.path("Output","Intermediate",inputfiles[i]),header=T,stringsAsFactors = F)
     missing <- read.table(file.path("Output","Check",paste0("Missing_Taxa_",FileInfo[i,"Dataset_brief_name"],".csv")),stringsAsFactors=F)[,1]
     
-    if (!any(new_names$taxon_orig%in%dat$taxon_orig)) next # jump to next database if no match found
+    if (!any(new_names$verbatimTaxonRank%in%dat$verbatimTaxonRank)) next # jump to next database if no match found
     
     ## replace taxonomic information for each provided new taxon name 
     for (j in 1:nrow(new_names)){
       
-      # if (length(unique(dat[dat$taxon_orig==new_names$taxon_orig[j],]$Family))>1 & is.na(new_names$Family[j])){
-      #   cat(paste0("\n Warning: Taxon name '",new_names$taxon_orig[j],"' found for more than one family. Add taxonomic information in UserDefinedTaxonNames.xlsx \n"))
+      # if (length(unique(dat[dat$verbatimTaxonRank==new_names$verbatimTaxonRank[j],]$Family))>1 & is.na(new_names$Family[j])){
+      #   cat(paste0("\n Warning: Taxon name '",new_names$verbatimTaxonRank[j],"' found for more than one family. Add taxonomic information in UserDefinedTaxonNames.xlsx \n"))
       #   next
       # }
   
       ## overwrite taxononomic information in individual database files
-      dat[dat$taxon_orig==new_names$taxon_orig[j],]$taxon <- new_names$New_taxon[j]
-      if (!is.na(new_names$New_scientificName[j])) dat[dat$taxon==new_names$taxon_orig[j],]$scientificName <- new_names$New_scientificName[j]
+      dat[dat$verbatimTaxonRank==new_names$verbatimTaxonRank[j],]$taxon <- new_names$New_taxon[j]
+      if (!is.na(new_names$New_scientificName[j])) dat[dat$taxon==new_names$verbatimTaxonRank[j],]$scientificName <- new_names$New_scientificName[j]
       
       ## overwrite taxononomic information in full taxon list
-      fullspeclist[fullspeclist$taxon_orig==new_names$taxon_orig[j],]$taxon <- new_names$New_taxon[j]
-      fullspeclist[fullspeclist$taxon_orig==new_names$taxon_orig[j],]$GBIFstatus <- ""
-      if (!is.na(new_names$New_scientificName[j])) fullspeclist[fullspeclist$taxon_orig==new_names$taxon_orig[j],]$scientificName <- new_names$New_scientificName[j]
-      if (!is.na(new_names$family[j])) fullspeclist[fullspeclist$taxon_orig==new_names$taxon_orig[j],]$family <- new_names$family[j]
-      if (!is.na(new_names$order[j])) fullspeclist[fullspeclist$taxon_orig==new_names$taxon_orig[j],]$order <- new_names$order[j]
-      if (!is.na(new_names$class[j])) fullspeclist[fullspeclist$taxon_orig==new_names$taxon_orig[j],]$class <- new_names$class[j]
-      if (!is.na(new_names$phylum[j])) fullspeclist[fullspeclist$taxon_orig==new_names$taxon_orig[j],]$phylum <- new_names$phylum[j]
-      if (!is.na(new_names$kingdom[j])) fullspeclist[fullspeclist$taxon_orig==new_names$taxon_orig[j],]$kingdom <- new_names$kingdom[j]
+      fullspeclist[fullspeclist$verbatimTaxonRank==new_names$verbatimTaxonRank[j],]$taxon <- new_names$New_taxon[j]
+      fullspeclist[fullspeclist$verbatimTaxonRank==new_names$verbatimTaxonRank[j],]$GBIFstatus <- ""
+      if (!is.na(new_names$New_scientificName[j])) fullspeclist[fullspeclist$verbatimTaxonRank==new_names$verbatimTaxonRank[j],]$scientificName <- new_names$New_scientificName[j]
+      if (!is.na(new_names$family[j])) fullspeclist[fullspeclist$verbatimTaxonRank==new_names$verbatimTaxonRank[j],]$family <- new_names$family[j]
+      if (!is.na(new_names$order[j])) fullspeclist[fullspeclist$verbatimTaxonRank==new_names$verbatimTaxonRank[j],]$order <- new_names$order[j]
+      if (!is.na(new_names$class[j])) fullspeclist[fullspeclist$verbatimTaxonRank==new_names$verbatimTaxonRank[j],]$class <- new_names$class[j]
+      if (!is.na(new_names$phylum[j])) fullspeclist[fullspeclist$verbatimTaxonRank==new_names$verbatimTaxonRank[j],]$phylum <- new_names$phylum[j]
+      if (!is.na(new_names$kingdom[j])) fullspeclist[fullspeclist$verbatimTaxonRank==new_names$verbatimTaxonRank[j],]$kingdom <- new_names$kingdom[j]
       
       ## remove taxon name from list of missing taxon names
-      if (any(new_names$taxon_orig[j]%in%missing)) missing <- missing[!missing%in%new_names$taxon_orig[j]]
+      if (any(new_names$verbatimTaxonRank[j]%in%missing)) missing <- missing[!missing%in%new_names$verbatimTaxonRank[j]]
     }
     
     write.table(missing,file.path("Output","Check",paste0("Missing_Taxa_",FileInfo[i,"Dataset_brief_name"],".csv")))

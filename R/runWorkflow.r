@@ -1,5 +1,3 @@
-#!/usr/bin/env Rscript
-
 ####### SInAS workflow: Integration and standardisation of alien species data ###########
 ##
 ## This script executes the SInAS workflow to standardise and integrate alien species 
@@ -45,6 +43,7 @@ source(file.path("R","CheckGBIFTax.r")) #function to check taxon names using GBI
 
 FileInfo <- read.xlsx(file.path("Config","DatabaseInfo.xlsx"),sheet=1)
 if (nrow(FileInfo)==0) stop("No database information provided. Add information to Config/DatabaseInfo.xlsx.")
+if (any(is.na(FileInfo$Dataset_scope))) {stop("No database scope information provided. Add information to the column Dataset_scope in Config/DatabaseInfo.xlsx.")}
 
 ## load databases, extract required information and harmonise taxon names...
 cat("\n Step 1 Preparation of provided data sets \n")
