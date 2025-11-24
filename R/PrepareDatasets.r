@@ -146,10 +146,10 @@ PrepareDatasets <- function(FileInfo=NULL){
     }
     
     ## column bibliographicCitation
-    if (!is.na(FileInfo[i,"Column_bibliographicCitation"]) & FileInfo[i,"Column_bibliographicCitation"]!=""){
-      col_bibliographicCitation <- FileInfo[i,"Column_bibliographicCitation"]
-      all_column_names <- c(all_column_names,col_bibliographicCitation)
-    }
+    # if (!is.na(FileInfo[i,"Column_bibliographicCitation"]) & FileInfo[i,"Column_bibliographicCitation"]!=""){
+    #   col_bibliographicCitation <- FileInfo[i,"Column_bibliographicCitation"]
+    #   all_column_names <- c(all_column_names,col_bibliographicCitation)
+    # }
 
     ## additional columns to keep throughout the following processing
     if (!is.na(FileInfo[i,"Column_additional"]) & FileInfo[i,"Column_additional"]!=""){

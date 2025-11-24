@@ -31,8 +31,11 @@ MergeDatabases <- function(FileInfo=NULL,
     cnames <- colnames(dat)
     cnames <- cnames[!cnames%in%c("verbatimTaxonRank","location_orig","Kingdom_user","Country_ISO","ISO3","eventDate_orig","Taxon_group")]
     dat <- dat[,colnames(dat)%in%cnames]
-
+    
+    # add name abbreviation and bibliographic citation of the source database
+    
     dat$datasetName <- FileInfo[i,1]
+    dat$bibliographicCitation <- FileInfo[i,"Column_bibliographicCitation"]
     
     # remove records whose location could not be standardized 
     dat <- dat[!is.na(dat$locationID), ]
