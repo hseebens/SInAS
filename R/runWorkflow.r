@@ -21,7 +21,7 @@ library(tidyverse)
 ## option for storing the intermediate and final output
 outputfilename <- "SInAS" # name of final output file
 
-version <- "3.0" # which version of the database are you going to produce? this will be attached to the end of 'outputfilename'
+version <- "3.1.1" # which version of the database are you going to produce? this will be attached to the end of 'outputfilename'
 
 output <- T # shall intermediate results be stored to disk? (may overwrite existing files!)
 
