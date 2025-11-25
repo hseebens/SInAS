@@ -35,9 +35,17 @@ GeteventDate <- function(FileInfo=NULL){
   for (i in 1:length(inputfiles)){
     
     dat <- read.table(file.path("Output","Intermediate",paste0(inputfiles[i])),header=T,stringsAsFactors = F)
-
+    
     dat$eventDate_orig  <- dat$eventDate # keep original entry
     dat$eventDate2_orig <- dat$eventDate2 # keep original entry
+    
+    ## keep eventDates only for first records of alien species (i.e. year of introduction) 
+    if ("eventDate" %in% colnames(dat)) {
+      dat$eventDate[dat$establishmentMeans == "native"] <- NA
+    }
+    if ("eventDate2" %in% colnames(dat)) {
+      dat$eventDate2[dat$establishmentMeans == "native"] <- NA
+    }
     
     ## treat first records #############
     nonnumeric <- vector()
@@ -110,7 +118,7 @@ GeteventDate <- function(FileInfo=NULL){
         translated_eventDates[[i]] <- out_translated
       }
     }    
-
+    
     ## Output #######################################
     
     ## store entries which could not be treated
