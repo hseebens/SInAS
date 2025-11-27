@@ -4,5 +4,6 @@
 .Ruserdata
 .DS_Store
 Inputfiles/
+/Run 3.1.1
 *.zip
 *.gpkg
