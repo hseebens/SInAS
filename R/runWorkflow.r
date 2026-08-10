@@ -17,11 +17,13 @@ library(rgbif) # for checking names, records and taxonomy; note: usage of rgbif 
 library(openxlsx)
 library(data.table)
 library(tidyverse)
+library(doParallel)
+library(foreach)
 
 ## option for storing the intermediate and final output
 outputfilename <- "SInAS" # name of final output file
 
-version <- "3.1.1" # which version of the database are you going to produce? this will be attached to the end of 'outputfilename'
+version <- "3.2" # which version of the database are you going to produce? this will be attached to the end of 'outputfilename'
 
 output <- T # shall intermediate results be stored to disk? (may overwrite existing files!)
 
@@ -29,12 +31,11 @@ output <- T # shall intermediate results be stored to disk? (may overwrite exist
 ### load functions #############################################################
 source(file.path("R","PrepareDatasets.r")) # preparing example data sets as input files
 source(file.path("R","StandardiseTaxonNames.r")) # standardising taxon names, requires GBIF connection, takes some time...
-source(file.path("R","OverwriteTaxonNames.r")) # replace taxon names with user-defined ones
 source(file.path("R","StandardiseLocationNames.r")) # standardising location names
 source(file.path("R","StandardiseTerms.r")) # standardising location names
 source(file.path("R","GeteventDate.r")) # standardising location names
 source(file.path("R","MergeDatabases.r")) # combine data sets
-source(file.path("R","CheckGBIFTax.r")) #function to check taxon names using GBIF taxonomy
+source(file.path("R","CheckGBIFTaxParallel.r")) #function to check taxon names using GBIF taxonomy
 ################################################################################
 
 
@@ -60,7 +61,6 @@ StandardiseLocationNames(FileInfo)
 ## load databases, extract required information and harmonise taxon names...
 cat("\n Step 4 Standardisation of taxon names \n")
 StandardiseTaxonNames(FileInfo)
-OverwriteTaxonNames(FileInfo) # user-defined taxon names
 
 ## standardise first records....
 cat("\n Step 5 Standardisation of eventDate \n")
