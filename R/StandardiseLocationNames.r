@@ -3,178 +3,195 @@
 ##
 ## Step 2b: Standardisation of location names using a translation table "AllLocations.xlsx"
 ##
-## Manuela Gómez-Suárez, Hanno Seebens, Giessen, 25.09.2025
+## Manuela Gómez-Suárez, Hanno Seebens, Giessen, 17.04.2026
 #########################################################################################
 
 
-StandardiseLocationNames <- function(FileInfo=NULL){
+StandardiseLocationNames <- function(FileInfo = NULL) {
   
-  ## load data #########################################################
+  ## 1. Load translation tables ################################################
+  regions_raw <- as.data.table(
+    read.xlsx(file.path("Config", "AllLocations.xlsx"), sheet = "location", na.strings = "")
+  )[, .(locationID, location, location_var)]
+  regions_raw[, location_var   := tolower(location_var)]
+  regions_raw[, location_lower := tolower(location)]
   
-  ## identify input datasets based on file name "StandardSpec_....csv"
-  allfiles <- list.files(file.path("Output","Intermediate"))
-  inputfiles_all <- allfiles[grep("Step2_StandardTerms_",allfiles)]
+  subregions_raw <- as.data.table(
+    read.xlsx(file.path("Config", "AllLocations.xlsx"), sheet = "stateProvince", na.strings = "")
+  )[, .(locationID, location, gadm1_name, gadm1_var)]
+  subregions_raw[, gadm1_var   := tolower(gadm1_var)]
+  subregions_raw[, gadm1_lower := tolower(gadm1_name)]
   
-  inputfiles <- vector()
-  for (i in 1:nrow(FileInfo)){
-    inputfiles <- c(inputfiles,paste("Step2_StandardTerms_",FileInfo[i,"Dataset_brief_name"],".csv",sep=""))
+  ## Add compound name variants: "gadm1_name, country" and "gadm1_name (country)"
+  subregions_raw[, combined_name    := tolower(paste(gadm1_name, location, sep = ", "))]
+  subregions_raw[, parenthesis_name := tolower(paste0(gadm1_name, " (", location, ")"))]
+  subregions_raw[, gadm1_var := fcase(
+    is.na(gadm1_var) | gadm1_var == "",
+    paste(combined_name, parenthesis_name, sep = "; "),
+    default = paste(gadm1_var, combined_name, parenthesis_name, sep = "; ")
+  )]
+  subregions_raw[, c("combined_name", "parenthesis_name") := NULL]
+  
+  ## Detect ambiguous subregion base names (shared across countries)
+  base_names <- gsub("\\s*\\(.*?\\)", "", subregions_raw$gadm1_name)
+  dup <- unique(base_names[duplicated(base_names)])
+  
+  ## 2. Build flat key → value lookup tables ###################################
+  ## One key for each location variation
+  expand_keys <- function(dt, key_col, value_cols) {
+    keys_list <- strsplit(dt[[key_col]], ";", fixed = TRUE)
+    lens      <- lengths(keys_list)
+    out       <- dt[rep(seq_len(nrow(dt)), lens), value_cols, with = FALSE]
+    out[, key := trimws(unlist(keys_list))]
+    out[nzchar(key)]          # drop any empty strings
   }
-  inputfiles <- inputfiles[!is.na(inputfiles)]
   
-  ## load location tables #######
-  regions <- read.xlsx(file.path("Config", "AllLocations.xlsx"), sheet = "location", na.strings = "") # Sheet with first aggregation level (i.e. countries)
-  regions <- regions[, c("locationID", "location", "location_var")]
-  regions$location_var <- tolower(regions$location_var)  # Set all to lowercase for matching
-  regions$location_lower <- tolower(regions$location)  # Set all to lowercase for matching
-  
-  ## load table with state, provinces, departments, etc... (i.e. subregions)
-  subregions <- read.xlsx(file.path("Config", "AllLocations.xlsx"), sheet = "stateProvince", na.strings = "") # Sheet with second aggregation level (i.e. states, provinces...)
-  subregions <- subregions[, c("locationID", "location", "location_var", "gadm1_name", "gadm1_var")]
-  subregions$gadm1_var <- tolower(subregions$gadm1_var)  # Set all to lowercase for matching
-  subregions$Gadm1_lower <- tolower(subregions$gadm1_name)  # Set all to lowercase for matching
-  
-  ## add variations of gadm1_var: "subregion, region"
-  subregions$combined_name <- tolower(paste(subregions$gadm1_name, subregions$location, sep = ", ")) # combine 'gadm1_name' and 'location'
-  subregions$parenthesis_name <- tolower(paste(subregions$gadm1_name, " (", subregions$location, ")", sep = "")) # combine 'gadm1_name' and '(location)'
-  
-  ## Make sure any existing NA values in gadm1_var are interpreted as empty strings for concatenation
-  subregions$gadm1_var <- ifelse(is.na(subregions$gadm1_var), "", subregions$gadm1_var)
-  
-  ## Concatenate new variations
-  subregions$gadm1_var <- ifelse(
-    subregions$gadm1_var == "",
-    paste(subregions$combined_name, subregions$parenthesis_name, sep = "; "),
-    paste(subregions$gadm1_var, subregions$combined_name, subregions$parenthesis_name, sep = "; ")
+  ## Regions lookup: direct country names + location_var variants
+  regions_lut <- unique(
+    rbind(
+      regions_raw[, .(key = location_lower, locationID, location)],
+      regions_raw[!is.na(location_var),
+                  expand_keys(.SD, "location_var", c("locationID", "location"))]
+    ),
+    by = "key"
   )
+  setkey(regions_lut, key)
   
-  subregions <- select(subregions, -c(combined_name, parenthesis_name))
+  ## Subregions lookup: direct gadm1 names + gadm1_var variants
+  subregions_lut <- unique(
+    rbind(
+      subregions_raw[, .(key = gadm1_lower, locationID, location, gadm1_name)],
+      subregions_raw[nzchar(gadm1_var),
+                     expand_keys(.SD, "gadm1_var", c("locationID", "location", "gadm1_name"))]
+    ),
+    by = "key"
+  )
+  setkey(subregions_lut, key)
   
-  ## Get duplicated names of subregions  
-  dup <- unique(gsub("\\s*\\(.*?\\)", "", subregions$gadm1_name)[duplicated(gsub("\\s*\\(.*?\\)", "", subregions$gadm1_name))])
+  ## Country-level table for final locationID re-assignment
+  ## (locationID always reflects country level, not subregion level)
+  regions_clean <- unique(regions_raw[, .(location, locationID)], by = "location")
+  setkey(regions_clean, location)
   
+  ## 3. Input file list ########################################################
+  inputfiles <- paste0("Step2_StandardTerms_",
+                       na.omit(FileInfo$Dataset_brief_name),
+                       ".csv")
   
-  ## loop over all data sets ############################################
-  
-  for (i in 1:length(inputfiles)){
+  ## 4. Process files in parallel ##############################################
+  n_cores <- min(length(inputfiles), max(1L, detectCores() - 1L))
+  if (n_cores > 1L) {
+    cl <- makeCluster(n_cores)
+    registerDoParallel(cl)
+    on.exit(stopCluster(cl), add = TRUE)
     
-    dat <- read.table(file.path("Output","Intermediate",paste0(inputfiles[i])),header=T,stringsAsFactors = F)
+    
+    clusterExport(
+      cl,
+      c("regions_lut", "subregions_lut", "regions_clean", 
+        "dup", "FileInfo", "inputfiles"),
+      envir = environment()
+    )
+    
+    `%exec%` <- `%dopar%`
+  } else {
+    `%exec%` <- `%do%`
+  }
 
-    ## Prepare for matching with regions
-    dat_match1 <- dat ## use another dat set for region matching to keep the original names
-    dat_match1$order <- 1:nrow(dat_match1)
-    dat_match1$location_orig <- gsub("\\xa0|\\xc2", " ", dat_match1$location_orig)  # Replace special spaces
-    dat_match1$location_orig <- gsub("^\\s+|\\s+$", "", dat_match1$location_orig)  # Trim leading/trailing whitespace
-    dat_match1$location_orig <- gsub("  ", " ", dat_match1$location_orig)  # Replace double spaces
-    dat_match1$location_orig <- gsub(" \\(the\\)", "", dat_match1$location_orig)  # Remove " (the)"
-    dat_match1$location_lower <- tolower(dat_match1$location_orig)  # Lowercase for matching
+  
+  foreach(
+    i         = seq_along(inputfiles),
+    .packages = "data.table"
+  ) %exec% {
     
-    ## Step 1: Exact match of names of 'dat' with region names of 'regions' and 'subregions' 
-    dat_match_regions <- merge(dat_match1, regions, by.x = "location_lower", by.y = "location_lower", all.x = TRUE)
-    dat_match_subregions <- merge(dat_match1, subregions, by.x = "location_lower", by.y = "Gadm1_lower", all.x = TRUE)
+    dat <- as.data.table(
+      read.table(file.path("Output", "Intermediate", inputfiles[i]),
+                 header = TRUE, stringsAsFactors = FALSE)
+    )
     
-    ## Step 2a: Exact match based on keywords in 'regions' in column "location_var" 
-    ind_keys_regions <- which(!is.na(regions$location_var))
-    for (j in ind_keys_regions) {  # loop over rows with multiple country name variations
-      location_var <- unlist(strsplit(regions$location_var[j], "; ")) # check if multiple country name variations provided
-      for (k in location_var) {
-        ind_match <- which(dat_match_regions$location_lower == k)
-        if (length(unique(regions$location[j])) > 1) 
-          cat(paste0("Warning: ", k, " matches multiple location names. Refine location_var!"))
-        
-        dat_match_regions$location[ind_match] <- regions$location[j]
-        dat_match_regions$locationID[ind_match] <- regions$locationID[j]
-      }
-    }
+    ## Normalise the location string ###########################################
+    dat[, loc_key := tolower(location_orig)]
+    dat[, loc_key := gsub("\u00a0|\u00c2", " ", loc_key)]
+    dat[, loc_key := trimws(loc_key)]
+    dat[, loc_key := gsub("  +", " ",  loc_key)]
+    dat[, loc_key := gsub(" \\(the\\)$", "", loc_key)]
     
-    ## Step 2b: Exact match based on keywords in 'subregions' in column "gadm1_var"
-    ind_keys_subregions <- which(!is.na(subregions$gadm1_var))
-    for (j in ind_keys_subregions) {  # loop over rows with multiple subregion name variations
-      
-      gadm1_var <- unlist(strsplit(subregions$gadm1_var[j], "; ")) # check if multiple subregion name variations provided
-      
-      for (k in gadm1_var) {
-        
-        ind_match <- which(dat_match_subregions$location_lower == k)
-        
-        if (length(unique(subregions$gadm1_name[j])) > 1){
-          cat(paste0("Warning: ", k, " matches multiple location names. Refine gadm1_var!"))
-        }
-        
-        dat_match_subregions$gadm1_name[ind_match] <- subregions$gadm1_name[j]
-        dat_match_subregions$location[ind_match] <- subregions$location[j]
-        dat_match_subregions$locationID[ind_match] <- subregions$locationID[j]
-      }
-    }
+    ## Initialise output columns (ensures clean state regardless of input)
+    dat[, c("locationID", "location", "stateProvince") :=
+          .(NA_integer_, NA_character_, NA_character_)]
     
-    ## Merge both data frames with standardized locations names ('region' and 'subregion')
-    dat_match1 <- full_join(dat_match_subregions, 
-                            dat_match_regions |> select(order, locationID, location), 
-                            by="order") |> 
-      mutate(locationID = coalesce(locationID.x, locationID.y),
-             location = coalesce(location.x, location.y))|> 
-      select(-locationID.x, -locationID.y, -location.x, -location.y, -location_var, -gadm1_var)
+    ## Two-pass keyed join #####################################################
+    ## Pass 1: subregion match — sets stateProvince, location, locationID
+    dat[subregions_lut, on = .(loc_key = key),
+        `:=`(locationID    = i.locationID,
+             location      = i.location,
+             stateProvince = i.gadm1_name)]
     
-
-    ## final merging of both data sets with standardized region names to original data
-    dat_match1 <- dat_match1[order(dat_match1$order),]
-    if (!identical(dat_match1$verbatimTaxonRank,dat$verbatimTaxonRank)) stop("Data sets not sorted equally!")
+    ## Pass 2: region match only for rows still unmatched 
+    dat[is.na(locationID),
+        `:=`(locationID = regions_lut[.SD, on = .(key = loc_key), x.locationID],
+             location   = regions_lut[.SD, on = .(key = loc_key), x.location])]
     
-    dat$locationID <- dat_match1$locationID
-    dat$location <- dat_match1$location
-    dat$stateProvince <- dat_match1$gadm1_name
+    ## ── Warn about ambiguous non-matched subregion names #####################
+    ambig <- unique(dat$location_orig[dat$location_orig %in% dup])
+    if (length(ambig) > 0L)
+      message(sprintf(
+        "\n    Warning: Unresolved terms in %s. Location name(s) matching multiple subregions: %s.\n    Add country in parentheses, e.g. 'Amazonas (Colombia)'.\n",
+        FileInfo[i, "Dataset_brief_name"],
+        paste(ambig, collapse = ", ")
+      ))
     
-    ## Check if any location in the original dataset corresponds to duplicated locations elsewhere 
-    if (any(dat$location_orig %in% dup)) {
-      
-      # Extract the matching names from dat$location_orig
-      matching_names <- unique(dat$location_orig[dat$location_orig %in% dup])
-      cat(paste(
-        "\n    Warning: Unresolved terms in ",FileInfo[i,"Dataset_brief_name"],".The following location name(s) correspond to multiple subregions in the world:",
-        paste(matching_names, collapse = ", "),
-        ". Please modify the original location name(s) by including the country name in parentheses(), and try again (e.g: Amazonas (Colombia)) \n"
-        ))
-    }
+    ## Remove duplicates #######################################################
+    dat <- unique(dat)
     
-    dat_regnames <- dat
+    ## Re-assign locationID from country-level table ###########################
+    dat[, locationID := NULL]
+    dat[regions_clean, on = "location", locationID := i.locationID]
     
-    ## Remove duplicated entries
-    dat_regnames <- dat_regnames[!duplicated(dat_regnames), ]
-    write_regnames <- dat_regnames
+    ## Write output and drop working columns ###################################
+    drop_cols <- intersect(c("stateProvince", "loc_key"), names(dat))
+    write.table(
+      dat[, -drop_cols, with = FALSE],
+      file.path("Output", "Intermediate",
+                paste0("Step3_StandardLocationNames_",
+                       FileInfo[i, "Dataset_brief_name"], ".csv")),
+      row.names = FALSE
+    )
     
-    # Clean locations and locationID 
-    write_regnames <- write_regnames |> 
-      select(-c(stateProvince, locationID)) |> 
-      left_join(regions |> select(location, locationID), by = "location")
+    ## Export unmatched locations ##############################################
+    missing_locs <- sort(unique(dat$location_orig[is.na(dat$locationID)]))
+    if (length(missing_locs) > 0L)
+      write.table(
+        missing_locs,
+        file.path("Output", "Check",
+                  paste0("Missing_Locations_",
+                         FileInfo[i, "Dataset_brief_name"], ".csv")),
+        row.names = FALSE, col.names = FALSE
+      )
     
-    
-    ## Output ###########################
-    
-    ## Save the file with standardized location names
-    write.table(write_regnames,file.path("Output","Intermediate",paste0("Step3_StandardLocationNames_",FileInfo[i,"Dataset_brief_name"],".csv")),row.names=F)
-    
-    ## Check and export missing locations
-    missing <- dat_regnames$location_orig[is.na(dat_regnames$locationID)]
-    if (length(missing) > 0) {
-      write.table(sort(unique(missing)),file.path("Output","Check",paste0("Missing_Locations_",FileInfo[i,"Dataset_brief_name"],".csv")),row.names = F,col.names=F)
-    }
+    invisible(NULL)
   }
   
-  ## Post-processing: Aggregate and export changed location names
-  if (nrow(dat_regnames)>0){ # avoid step when no region names have changed
-    
-    reg_names <- vector()
-    for (i in 1:length(inputfiles)){
-      dat <- read.table(file.path("Output","Intermediate",paste0("Step3_StandardLocationNames_",FileInfo[i,"Dataset_brief_name"],".csv")),stringsAsFactors = F,header=T)
-      reg_names <- rbind(reg_names,cbind(dat[,c("location","location_orig")],FileInfo[i,1]))
-    }
-    
-    reg_names <- reg_names[reg_names$location!=reg_names$location_orig,] # export only region names deviating from the original
-    reg_names <- unique(reg_names[order(reg_names$location),])
-    colnames(reg_names) <- c("location","location_orig","datasetName")
-    
-    # Clean locations and locationID 
-    reg_names  <- reg_names |> left_join(regions |> select(location, locationID), by = "location")
-    
-    write.table(reg_names,file.path("Output","Translated_LocationNames.csv"),row.names=F)
-  }
+  ## 5. Post-process: aggregate changed location names #########################
+  reg_names <- rbindlist(lapply(seq_along(inputfiles), function(i) {
+    dat <- as.data.table(
+      read.table(
+        file.path("Output", "Intermediate",
+                  paste0("Step3_StandardLocationNames_",
+                         FileInfo[i, "Dataset_brief_name"], ".csv")),
+        header = TRUE, stringsAsFactors = FALSE
+      )
+    )
+    data.table(location      = dat$location,
+               location_orig = dat$location_orig,
+               datasetName   = FileInfo[i, 1L])
+  }))
+  
+  reg_names <- reg_names[location != location_orig]
+  reg_names <- unique(reg_names[order(location)])
+  reg_names[regions_clean, on = "location", locationID := i.locationID]
+  
+  write.table(reg_names,
+              file.path("Output", "Translated_LocationNames.csv"),
+              row.names = FALSE)
 }
